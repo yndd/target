@@ -24,6 +24,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// A TargetKind contains the type metadata for a kind of target resource.
+type TargetKind schema.GroupVersionKind
+
 // MustCreateObject returns a new Object of the supplied kind. It panics if the
 // kind is unknown to the supplied ObjectCreator.
 func MustCreateObject(kind schema.GroupVersionKind, oc runtime.ObjectCreater) runtime.Object {
