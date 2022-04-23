@@ -40,7 +40,7 @@ import (
 
 const (
 	// target
-	targetCachePrefix = "target"
+	TargetCachePrefix = "target"
 	// errors
 	errJSONMarshal     = "cannot marshal JSON object"
 	errObserveResource = "cannot observe Target"
@@ -126,7 +126,7 @@ func (e *external) Observe(ctx context.Context, namespace string, tspec *ygotndd
 	log := e.log.WithValues("Target", tspec.Name)
 	log.Debug("Observing ...")
 
-	crTarget := strings.Join([]string{targetCachePrefix, namespace, *tspec.Name}, ".")
+	crTarget := strings.Join([]string{TargetCachePrefix, namespace, *tspec.Name}, ".")
 
 	req := &gnmi.GetRequest{
 		Prefix:   &gnmi.Path{Target: crTarget},
@@ -228,7 +228,7 @@ func (e *external) Create(ctx context.Context, namespace string, tspec *ygotnddt
 		return errors.Wrap(err, errCreateResource)
 	}
 
-	crTarget := strings.Join([]string{targetCachePrefix, namespace, *tspec.Name}, ".")
+	crTarget := strings.Join([]string{TargetCachePrefix, namespace, *tspec.Name}, ".")
 
 	req := &gnmi.SetRequest{
 		Prefix:  &gnmi.Path{Target: crTarget},
@@ -247,7 +247,7 @@ func (e *external) Delete(ctx context.Context, namespace string, tspec *ygotnddt
 	log := e.log.WithValues("Target", tspec.Name)
 	log.Debug("Deleting ...")
 
-	crTarget := strings.Join([]string{targetCachePrefix, namespace, *tspec.Name}, ".")
+	crTarget := strings.Join([]string{TargetCachePrefix, namespace, *tspec.Name}, ".")
 
 	req := &gnmi.SetRequest{
 		Prefix: &gnmi.Path{Target: crTarget},
