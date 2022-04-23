@@ -1,0 +1,15 @@
+---
+apiVersion: dvr.ndd.yndd.io/v1
+kind: Target
+metadata:
+  name: leaf1
+spec:
+  properties:
+    name: leaf1
+    admin-state: enable
+    vendor-type: nokia-srl
+    config:
+      address: 172.20.20.5:57400
+      credentialsName: srl-secrets
+      encoding: JSON_IETF
+      skpVerify: true
