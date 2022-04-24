@@ -84,7 +84,7 @@ type Observation struct {
 type connector struct {
 	log         logging.Logger
 	m           *model.Model
-	fm          *model.Model
+	//fm          *model.Model
 	newClientFn func(c *types.TargetConfig) *target.Target
 }
 
@@ -108,14 +108,14 @@ func (c *connector) Connect(ctx context.Context, address string) (ExternalClient
 	if err := cl.CreateGNMIClient(ctx); err != nil {
 		return nil, errors.Wrap(err, "error creating new client")
 	}
-	return &external{client: cl, log: c.log, m: c.m, fm: c.fm}, nil
+	return &external{client: cl, log: c.log, m: c.m}, nil
 }
 
 type external struct {
 	client *target.Target
 	log    logging.Logger
 	m      *model.Model
-	fm     *model.Model
+	//fm     *model.Model
 }
 
 func (e *external) Close() {
@@ -174,22 +174,14 @@ func (e *external) Observe(ctx context.Context, namespace string, tspec *ygotndd
 	log.Debug("Observing ...", "cacheStateData", string(cacheTargetData))
 
 	// validate the target cache as a validtedGoStruct
-	validatedGoStruct, err := e.fm.NewConfigStruct(cacheTargetData, true)
+	validatedGoStruct, err := e.m.NewConfigStruct(cacheTargetData, true)
 	if err != nil {
 		return Observation{}, err
 	}
 	// type casting
-	cacheNddTargetDevice, ok := validatedGoStruct.(*ygotnddtarget.Device)
+	cacheTargetEntry, ok := validatedGoStruct.(*ygotnddtarget.NddTarget_TargetEntry)
 	if !ok {
 		return Observation{}, errors.New("wrong ndd target object")
-	}
-
-	log.Debug("Observing ...", "cacheNddTargetDevice", cacheNddTargetDevice)
-
-	// check if the entry exists
-	cacheTargetEntry, ok := cacheNddTargetDevice.TargetEntry[*tspec.Name]
-	if !ok {
-		return Observation{}, nil
 	}
 
 	log.Debug("Observing ...", "cacheStateEntry", cacheTargetEntry)
@@ -251,13 +243,7 @@ func (e *external) Delete(ctx context.Context, namespace string, tspec *ygotnddt
 
 	req := &gnmi.SetRequest{
 		Prefix: &gnmi.Path{Target: crTarget},
-		Delete: []*gnmi.Path{
-			{
-				Elem: []*gnmi.PathElem{
-					{Name: "target-entry", Key: map[string]string{"name": *tspec.Name}},
-				},
-			},
-		},
+		Delete: []*gnmi.Path{},
 	}
 
 	_, err := e.client.Set(ctx, req)
@@ -282,11 +268,7 @@ func (e *external) getUpate(tspec *ygotnddtarget.NddTarget_TargetEntry) ([]*gnmi
 	//return update
 	return []*gnmi.Update{
 		{
-			Path: &gnmi.Path{
-				Elem: []*gnmi.PathElem{
-					{Name: "state-entry", Key: map[string]string{"name": *tspec.Name}},
-				},
-			},
+			Path: &gnmi.Path{},
 			Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: []byte(targetEntryJson)}},
 		},
 	}, nil

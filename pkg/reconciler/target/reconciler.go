@@ -1,3 +1,19 @@
+/*
+Copyright 2021 NDD.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package target
 
 import (
@@ -141,12 +157,14 @@ func NewReconciler(m manager.Manager, o ...ReconcilerOption) *Reconciler {
 	// been registered with our controller manager's scheme.
 	_ = tg()
 
-	tfm := &model.Model{
-		StructRootType:  reflect.TypeOf((*ygotnddtarget.Device)(nil)),
-		SchemaTreeRoot:  ygotnddtarget.SchemaTree["Device"],
-		JsonUnmarshaler: ygotnddtarget.Unmarshal,
-		EnumData:        ygotnddtarget.ΛEnum,
-	}
+	/*
+		tfm := &model.Model{
+			StructRootType:  reflect.TypeOf((*ygotnddtarget.Device)(nil)),
+			SchemaTreeRoot:  ygotnddtarget.SchemaTree["Device"],
+			JsonUnmarshaler: ygotnddtarget.Unmarshal,
+			EnumData:        ygotnddtarget.ΛEnum,
+		}
+	*/
 
 	tm := &model.Model{
 		StructRootType:  reflect.TypeOf((*ygotnddtarget.NddTarget_TargetEntry)(nil)),
@@ -156,9 +174,9 @@ func NewReconciler(m manager.Manager, o ...ReconcilerOption) *Reconciler {
 	}
 
 	r := &Reconciler{
-		client:       m.GetClient(),
-		newTarget:    tg,
-		fm:           tfm,
+		client:    m.GetClient(),
+		newTarget: tg,
+		//fm:           tfm,
 		m:            tm,
 		pollInterval: defaultpollInterval,
 		timeout:      reconcileTimeout,
@@ -173,7 +191,7 @@ func NewReconciler(m manager.Manager, o ...ReconcilerOption) *Reconciler {
 	r.gnmiConnector = &connector{
 		log:         r.log,
 		m:           tm,
-		fm:          tfm,
+		//fm:          tfm,
 		newClientFn: target.NewTarget,
 	}
 	return r
@@ -306,7 +324,7 @@ func (r *Reconciler) Reconcile(_ context.Context, req reconcile.Request) (reconc
 	// Retrieve the Login details from the target cr spec and validate
 	// the target details and build the credentials for authentication
 	// to the target.
-	creds, err := r.validateCredentials(ctx, t.GetNamespace(), tspec)
+	creds, err := r.getCredentials(ctx, t.GetNamespace(), tspec)
 	//log.Debug("Target creds", "creds", creds, "err", err)
 	if err != nil || creds == nil {
 		// CHECK IF A TARGET DRIVER WAS ALREDY RUNNING -> IF SO STOP/DELETE IT

@@ -42,9 +42,9 @@ type Credentials struct {
 	Password string
 }
 
-// validateCredentials retrieve the Login details from the target cr spec and validates the target details.
+// getCredentials retrieve the Login details from the target cr spec and validates the target details.
 // The target cr spec info is used to build the credentials for authentication to the target.
-func (r *Reconciler) validateCredentials(ctx context.Context, namespace string, tspec *ygotnddtarget.NddTarget_TargetEntry) (creds *Credentials, err error) {
+func (r *Reconciler) getCredentials(ctx context.Context, namespace string, tspec *ygotnddtarget.NddTarget_TargetEntry) (creds *Credentials, err error) {
 	//log := r.log.WithValues("namespace", t.GetNamespace(), "credentialsName", t.GetTargetCredentialsName(), "targetAddress", t.GetTargetAddress())
 	//log.Debug("Credentials Validation")
 	// Retrieve the secret from Kubernetes for thistarget
