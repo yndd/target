@@ -8,7 +8,7 @@ require (
 	github.com/openconfig/goyang v1.0.0
 	github.com/openconfig/ygot v0.17.0
 	github.com/pkg/errors v0.9.1
-	github.com/yndd/ndd-runtime v0.5.0
+	github.com/yndd/ndd-runtime v0.5.1
 	github.com/yndd/ndd-yang v0.2.0
 	google.golang.org/grpc v1.43.0
 	k8s.io/api v0.23.6

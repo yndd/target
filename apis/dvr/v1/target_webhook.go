@@ -20,8 +20,8 @@ import (
 	"reflect"
 
 	"github.com/openconfig/gnmi/proto/gnmi"
-	"github.com/yndd/ndd-target-runtime/internal/model"
-	ygotnddpstate "github.com/yndd/ndd-target-runtime/pkg/ygotnddtarget"
+	"github.com/yndd/ndd-runtime/pkg/model"
+	"github.com/yndd/ndd-target-runtime/pkg/ygotnddtarget"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -35,10 +35,10 @@ import (
 var statelog = logf.Log.WithName("ndd-target-webhook")
 var m = &model.Model{
 	ModelData:       make([]*gnmi.ModelData, 0),
-	StructRootType:  reflect.TypeOf((*ygotnddpstate.NddTarget_TargetEntry)(nil)),
-	SchemaTreeRoot:  ygotnddpstate.SchemaTree["NddTarget_TargetEntry"],
-	JsonUnmarshaler: ygotnddpstate.Unmarshal,
-	EnumData:        ygotnddpstate.ΛEnum,
+	StructRootType:  reflect.TypeOf((*ygotnddtarget.NddTarget_TargetEntry)(nil)),
+	SchemaTreeRoot:  ygotnddtarget.SchemaTree["NddTarget_TargetEntry"],
+	JsonUnmarshaler: ygotnddtarget.Unmarshal,
+	EnumData:        ygotnddtarget.ΛEnum,
 }
 
 func (r *Target) SetupWebhookWithManager(mgr ctrl.Manager) error {

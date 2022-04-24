@@ -11,8 +11,8 @@ import (
 	"github.com/yndd/ndd-runtime/pkg/event"
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/ndd-runtime/pkg/meta"
+	"github.com/yndd/ndd-runtime/pkg/model"
 	targetv1 "github.com/yndd/ndd-target-runtime/apis/dvr/v1"
-	"github.com/yndd/ndd-target-runtime/internal/model"
 	"github.com/yndd/ndd-target-runtime/pkg/resource"
 	"github.com/yndd/ndd-target-runtime/pkg/ygotnddtarget"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -208,8 +208,15 @@ func (r *Reconciler) Reconcile(_ context.Context, req reconcile.Request) (reconc
 		return reconcile.Result{Requeue: true}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
 	}
 
-	if tspec.VendorType != ygotnddtarget.NddTarget_VendorType_undefined {
-		if tspec.VendorType != r.expectedVendorType {
+	// if expectedVendorType is unset we dont care about it and can proceed,
+	// if it is set we should see if the Target CR vendor type matches the
+	// expected vendorType
+	if r.expectedVendorType != ygotnddtarget.NddTarget_VendorType_undefined {
+		// expected vendor type is set, so we compare expected and configured vendor Type
+
+		// if the expected vendor type does not match we return as the CR is not
+		// relevant to proceed
+		if r.expectedVendorType != tspec.VendorType {
 			log.Debug("unexpected vendor type", "crVendorType", tspec.VendorType, "expectedVendorType", r.expectedVendorType)
 			// stop the reconcile process as we should not be processing this cr; the vendor type is not expected
 			return reconcile.Result{}, nil
