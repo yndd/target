@@ -39,7 +39,7 @@ import (
 
 const (
 	// timers
-	managedFinalizerName = "finalizer.target.dvr.ndd.yndd.io"
+	targetFinalizerName = "finalizer.target.dvr.ndd.yndd.io"
 	reconcileGracePeriod = 30 * time.Second
 	reconcileTimeout     = 1 * time.Minute
 	shortWait            = 30 * time.Second
@@ -182,6 +182,7 @@ func NewReconciler(m manager.Manager, o ...ReconcilerOption) *Reconciler {
 		timeout:      reconcileTimeout,
 		log:          logging.NewNopLogger(),
 		record:       event.NewNopRecorder(),
+		finalizer:    resource.NewAPIFinalizer(m.GetClient(), targetFinalizerName),
 	}
 
 	for _, ro := range o {
@@ -189,8 +190,8 @@ func NewReconciler(m manager.Manager, o ...ReconcilerOption) *Reconciler {
 	}
 
 	r.gnmiConnector = &connector{
-		log:         r.log,
-		m:           tm,
+		log: r.log,
+		m:   tm,
 		//fm:          tfm,
 		newClientFn: target.NewTarget,
 	}
