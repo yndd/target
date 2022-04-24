@@ -1,5 +1,5 @@
 /*
-Package ygotnddpstate is a generated package which contains definitions
+Package ygotnddptarget is a generated package which contains definitions
 of structs which represent a YANG schema. The generated schema can be
 compressed by a series of transformations (compression was false
 in this case).
@@ -463,16 +463,16 @@ func (e E_NddTarget_Encoding) String() string {
 const (
 	// NddTarget_Encoding_UNSET corresponds to the value UNSET of NddTarget_Encoding
 	NddTarget_Encoding_UNSET E_NddTarget_Encoding = 0
-	// NddTarget_Encoding_json corresponds to the value json of NddTarget_Encoding
-	NddTarget_Encoding_json E_NddTarget_Encoding = 1
-	// NddTarget_Encoding_json_ietf corresponds to the value json_ietf of NddTarget_Encoding
-	NddTarget_Encoding_json_ietf E_NddTarget_Encoding = 2
-	// NddTarget_Encoding_bytes corresponds to the value bytes of NddTarget_Encoding
-	NddTarget_Encoding_bytes E_NddTarget_Encoding = 3
-	// NddTarget_Encoding_proto corresponds to the value proto of NddTarget_Encoding
-	NddTarget_Encoding_proto E_NddTarget_Encoding = 4
-	// NddTarget_Encoding_ascii corresponds to the value ascii of NddTarget_Encoding
-	NddTarget_Encoding_ascii E_NddTarget_Encoding = 5
+	// NddTarget_Encoding_JSON corresponds to the value JSON of NddTarget_Encoding
+	NddTarget_Encoding_JSON E_NddTarget_Encoding = 1
+	// NddTarget_Encoding_JSON_IETF corresponds to the value JSON_IETF of NddTarget_Encoding
+	NddTarget_Encoding_JSON_IETF E_NddTarget_Encoding = 2
+	// NddTarget_Encoding_BYTES corresponds to the value BYTES of NddTarget_Encoding
+	NddTarget_Encoding_BYTES E_NddTarget_Encoding = 3
+	// NddTarget_Encoding_PROTOBUF corresponds to the value PROTOBUF of NddTarget_Encoding
+	NddTarget_Encoding_PROTOBUF E_NddTarget_Encoding = 4
+	// NddTarget_Encoding_ASCII corresponds to the value ASCII of NddTarget_Encoding
+	NddTarget_Encoding_ASCII E_NddTarget_Encoding = 5
 )
 
 
@@ -549,11 +549,11 @@ var ΛEnum = map[string]map[int64]ygot.EnumDefinition{
 		2: {Name: "disable"},
 	},
 	"E_NddTarget_Encoding": {
-		1: {Name: "json"},
-		2: {Name: "json-ietf"},
-		3: {Name: "bytes"},
-		4: {Name: "proto"},
-		5: {Name: "ascii"},
+		1: {Name: "JSON"},
+		2: {Name: "JSON_IETF"},
+		3: {Name: "BYTES"},
+		4: {Name: "PROTOBUF"},
+		5: {Name: "ASCII"},
 	},
 	"E_NddTarget_Protocol": {
 		1: {Name: "gnmi"},
