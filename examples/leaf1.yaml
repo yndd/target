@@ -10,6 +10,6 @@ spec:
     vendor-type: nokia-srl
     config:
       address: 172.20.20.5:57400
-      credentialsName: srl-secrets
+      credentials-name: srl-secrets
       encoding: JSON_IETF
-      skpVerify: true
+      skp-verify: true

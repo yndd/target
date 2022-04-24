@@ -82,8 +82,8 @@ type Observation struct {
 }
 
 type connector struct {
-	log         logging.Logger
-	m           *model.Model
+	log logging.Logger
+	m   *model.Model
 	//fm          *model.Model
 	newClientFn func(c *types.TargetConfig) *target.Target
 }
@@ -174,7 +174,7 @@ func (e *external) Observe(ctx context.Context, namespace string, tspec *ygotndd
 	log.Debug("Observing ...", "cacheStateData", string(cacheTargetData))
 
 	// validate the target cache as a validtedGoStruct
-	validatedGoStruct, err := e.m.NewConfigStruct(cacheTargetData, true)
+	validatedGoStruct, err := e.m.NewConfigStruct(cacheTargetData, false)
 	if err != nil {
 		return Observation{}, err
 	}
@@ -269,7 +269,7 @@ func (e *external) getUpate(tspec *ygotnddtarget.NddTarget_TargetEntry) ([]*gnmi
 	return []*gnmi.Update{
 		{
 			Path: &gnmi.Path{},
-			Val: &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: []byte(targetEntryJson)}},
+			Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonVal{JsonVal: []byte(targetEntryJson)}},
 		},
 	}, nil
 }
