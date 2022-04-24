@@ -419,7 +419,7 @@ func (r *Reconciler) Reconcile(_ context.Context, req reconcile.Request) (reconc
 
 // getSpec return the spec as a stateEntry
 func (r *Reconciler) getSpec(t targetv1.Tg) (*ygotnddtarget.NddTarget_TargetEntry, error) {
-	validatedGoStruct, err := r.m.NewConfigStruct(t.GetSpec().Properties.Raw, false)
+	validatedGoStruct, err := r.m.NewConfigStruct(t.GetSpec().Properties.Raw, true)
 	if err != nil {
 		return nil, err
 	}

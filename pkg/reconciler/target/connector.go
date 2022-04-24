@@ -174,7 +174,7 @@ func (e *external) Observe(ctx context.Context, namespace string, tspec *ygotndd
 	log.Debug("Observing ...", "cacheStateData", string(cacheTargetData))
 
 	// validate the target cache as a validtedGoStruct
-	validatedGoStruct, err := e.m.NewConfigStruct(cacheTargetData, false)
+	validatedGoStruct, err := e.m.NewConfigStruct(cacheTargetData, true)
 	if err != nil {
 		return Observation{}, err
 	}
