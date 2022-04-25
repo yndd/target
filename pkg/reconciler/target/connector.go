@@ -346,11 +346,11 @@ func getDiscoveryInfo(cacheTargetEntry *ygotnddtarget.NddTarget_TargetEntry) *ta
 	}
 	return &targetv1.DiscoveryInfo{
 		VendorType:         ygot.String(cacheTargetEntry.GetState().VendorType.String()),
-		HostName:           ygot.String(*cacheTargetEntry.GetState().Hostname),
-		Kind:               ygot.String(*cacheTargetEntry.GetState().Kind),
-		SwVersion:          ygot.String(*cacheTargetEntry.GetState().SwVersion),
-		MacAddress:         ygot.String(*cacheTargetEntry.GetState().MacAddress),
-		SerialNumber:       ygot.String(*cacheTargetEntry.GetState().SerialNumber),
+		HostName:           cacheTargetEntry.GetState().Hostname,
+		Kind:               cacheTargetEntry.GetState().Kind,
+		SwVersion:          cacheTargetEntry.GetState().SwVersion,
+		MacAddress:         cacheTargetEntry.GetState().MacAddress,
+		SerialNumber:       cacheTargetEntry.GetState().SerialNumber,
 		SupportedEncodings: cacheTargetEntry.GetState().SupportedEncodings,
 	}
 }
