@@ -220,10 +220,10 @@ func (e *external) Create(ctx context.Context, namespace string, tspec *ygotnddt
 		return errors.Wrap(err, errCreateResource)
 	}
 
-	crTarget := strings.Join([]string{TargetCachePrefix, namespace, *tspec.Name}, ".")
+	crTarget := strings.Join([]string{namespace, *tspec.Name}, ".")
 
 	req := &gnmi.SetRequest{
-		Prefix:  &gnmi.Path{Target: crTarget},
+		Prefix:   &gnmi.Path{Target: crTarget, Origin: TargetCachePrefix},
 		Replace: updates,
 	}
 
@@ -239,10 +239,10 @@ func (e *external) Delete(ctx context.Context, namespace string, tspec *ygotnddt
 	log := e.log.WithValues("Target", tspec.Name)
 	log.Debug("Deleting ...")
 
-	crTarget := strings.Join([]string{TargetCachePrefix, namespace, *tspec.Name}, ".")
+	crTarget := strings.Join([]string{namespace, *tspec.Name}, ".")
 
 	req := &gnmi.SetRequest{
-		Prefix: &gnmi.Path{Target: crTarget},
+		Prefix:   &gnmi.Path{Target: crTarget, Origin: TargetCachePrefix},
 		Delete: []*gnmi.Path{},
 	}
 

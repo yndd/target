@@ -47,8 +47,7 @@ type Credentials struct {
 func (r *Reconciler) getCredentials(ctx context.Context, namespace string, tspec *ygotnddtarget.NddTarget_TargetEntry) (creds *Credentials, err error) {
 	//log := r.log.WithValues("namespace", t.GetNamespace(), "credentialsName", t.GetTargetCredentialsName(), "targetAddress", t.GetTargetAddress())
 	//log.Debug("Credentials Validation")
-	// Retrieve the secret from Kubernetes for thistarget
-
+	// Retrieve the secret from Kubernetes for this target
 	credsSecret, err := r.getSecret(ctx, namespace, tspec)
 	if err != nil {
 		return nil, err
@@ -63,8 +62,6 @@ func (r *Reconciler) getCredentials(ctx context.Context, namespace string, tspec
 		Username: strings.TrimSuffix(string(credsSecret.Data["username"]), "\n"),
 		Password: strings.TrimSuffix(string(credsSecret.Data["password"]), "\n"),
 	}
-
-	//log.Debug("Credentials", "creds", creds)
 
 	if creds.Username == "" {
 		return nil, errors.New(errMissingUsername)
