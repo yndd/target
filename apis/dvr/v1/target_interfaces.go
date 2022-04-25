@@ -16,8 +16,11 @@ limitations under the License.
 package v1
 
 import (
+	"errors"
+
 	nddv1 "github.com/yndd/ndd-runtime/apis/common/v1"
 	"github.com/yndd/ndd-runtime/pkg/resource"
+	"github.com/yndd/ndd-target-runtime/pkg/ygotnddtarget"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -49,7 +52,7 @@ type Tg interface {
 	GetControllerReference() nddv1.Reference
 	SetControllerReference(c nddv1.Reference)
 
-	GetSpec() TargetSpec
+	GetSpec() (*ygotnddtarget.NddTarget_TargetEntry, error)
 
 	GetDiscoveryInfo() DiscoveryInfo
 	SetDiscoveryInfo(dd *DiscoveryInfo)
@@ -75,10 +78,19 @@ func (t *Target) SetControllerReference(c nddv1.Reference) {
 	t.Status.ControllerRef = c
 }
 
-func (t *Target) GetSpec() TargetSpec {
-	return t.Spec
+func (t *Target) GetSpec() (*ygotnddtarget.NddTarget_TargetEntry, error) {
+	validatedGoStruct, err := m.NewConfigStruct(t.Spec.Properties.Raw, true)
+	if err != nil {
+		return nil, err
+	}
+	targetEntry, ok := validatedGoStruct.(*ygotnddtarget.NddTarget_TargetEntry)
+	if !ok {
+		return nil, errors.New("wrong object ndd target entry")
+	}
+
+	return targetEntry, nil
 }
- 
+
 func (t *Target) GetDiscoveryInfo() DiscoveryInfo {
 	return *t.Status.DiscoveryInfo
 }

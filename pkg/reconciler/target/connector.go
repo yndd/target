@@ -126,10 +126,10 @@ func (e *external) Observe(ctx context.Context, namespace string, tspec *ygotndd
 	log := e.log.WithValues("Target", tspec.Name)
 	log.Debug("Observing ...")
 
-	crTarget := strings.Join([]string{TargetCachePrefix, namespace, *tspec.Name}, ".")
+	crTarget := strings.Join([]string{namespace, *tspec.Name}, ".")
 
 	req := &gnmi.GetRequest{
-		Prefix:   &gnmi.Path{Target: crTarget},
+		Prefix:   &gnmi.Path{Target: crTarget, Origin: TargetCachePrefix},
 		Path:     []*gnmi.Path{{}},
 		Encoding: gnmi.Encoding_JSON,
 	}

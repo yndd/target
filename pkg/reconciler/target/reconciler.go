@@ -220,7 +220,7 @@ func (r *Reconciler) Reconcile(_ context.Context, req reconcile.Request) (reconc
 		"version", t.GetResourceVersion(),
 	)
 
-	tspec, err := r.getSpec(t)
+	tspec, err := t.GetSpec()
 	if err != nil {
 		log.Debug("Cannot get spec", "error", err)
 		t.SetConditions(nddv1.ReconcileError(err), nddv1.Unknown())
@@ -237,6 +237,8 @@ func (r *Reconciler) Reconcile(_ context.Context, req reconcile.Request) (reconc
 		// relevant to proceed
 		if r.expectedVendorType != tspec.VendorType {
 			log.Debug("unexpected vendor type", "crVendorType", tspec.VendorType, "expectedVendorType", r.expectedVendorType)
+			// TODO updatehandling fro vendotType changes
+
 			// stop the reconcile process as we should not be processing this cr; the vendor type is not expected
 			return reconcile.Result{}, nil
 		}
@@ -392,31 +394,30 @@ func (r *Reconciler) Reconcile(_ context.Context, req reconcile.Request) (reconc
 		t.SetDiscoveryInfo(nil)
 		return reconcile.Result{RequeueAfter: veryShortWait}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
 
-	} else {
-		// check if the config changed
-		if !observation.IsUpToDate {
-			// STOP THE TARGET DRIVER, THE NEXT REONCILE IT WILL BE CREATED WITH THE PROPER CONFIG
-			if err := external.Delete(ctx, req.Namespace, tspec); err != nil {
-				log.Debug("Cannot delete external resource", "error", err)
-				record.Event(t, event.Warning(reasonCannotDelete, err))
-				t.SetConditions(nddv1.ReconcileError(errors.Wrap(err, errReconcileDelete)), nddv1.Unavailable())
-				t.SetDiscoveryInfo(nil)
-				return reconcile.Result{Requeue: true}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
-			}
-
-			// We've successfully requested deletion of our external resource.
-			// We queue another reconcile after a short wait rather than
-			// immediately finalizing our delete in order to verify that the
-			// external resource was actually deleted. If it no longer exists
-			// we'll skip this block on the next reconcile and proceed to
-			// unpublish and finalize. If it still exists we'll re-enter this
-			// block and try again.
-			// log.Debug("Successfully requested deletion of external resource")
-			record.Event(t, event.Normal(reasonDeleted, "Successfully requested deletion of external resource"))
-			t.SetConditions(nddv1.ReconcileSuccess(), nddv1.Deleting())
+	}
+	// check if the config changed
+	if !observation.IsUpToDate {
+		// STOP THE TARGET DRIVER, THE NEXT REONCILE IT WILL BE CREATED WITH THE PROPER CONFIG
+		if err := external.Delete(ctx, req.Namespace, tspec); err != nil {
+			log.Debug("Cannot delete external resource", "error", err)
+			record.Event(t, event.Warning(reasonCannotDelete, err))
+			t.SetConditions(nddv1.ReconcileError(errors.Wrap(err, errReconcileDelete)), nddv1.Unavailable())
 			t.SetDiscoveryInfo(nil)
-			return reconcile.Result{RequeueAfter: veryShortWait}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
+			return reconcile.Result{Requeue: true}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
 		}
+
+		// We've successfully requested deletion of our external resource.
+		// We queue another reconcile after a short wait rather than
+		// immediately finalizing our delete in order to verify that the
+		// external resource was actually deleted. If it no longer exists
+		// we'll skip this block on the next reconcile and proceed to
+		// unpublish and finalize. If it still exists we'll re-enter this
+		// block and try again.
+		// log.Debug("Successfully requested deletion of external resource")
+		record.Event(t, event.Normal(reasonDeleted, "Successfully requested deletion of external resource"))
+		t.SetConditions(nddv1.ReconcileSuccess(), nddv1.Deleting())
+		t.SetDiscoveryInfo(nil)
+		return reconcile.Result{RequeueAfter: veryShortWait}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
 	}
 
 	if !observation.Discovered {
@@ -431,18 +432,4 @@ func (r *Reconciler) Reconcile(_ context.Context, req reconcile.Request) (reconc
 	log.Debug("Target is discovered and available", "requeue-after", time.Now().Add(r.pollInterval))
 	t.SetConditions(nddv1.ReconcileSuccess(), nddv1.Available())
 	return reconcile.Result{RequeueAfter: r.pollInterval}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
-}
-
-// getSpec return the spec as a stateEntry
-func (r *Reconciler) getSpec(t targetv1.Tg) (*ygotnddtarget.NddTarget_TargetEntry, error) {
-	validatedGoStruct, err := r.m.NewConfigStruct(t.GetSpec().Properties.Raw, true)
-	if err != nil {
-		return nil, err
-	}
-	targetEntry, ok := validatedGoStruct.(*ygotnddtarget.NddTarget_TargetEntry)
-	if !ok {
-		return nil, errors.New("wrong object ndd target entry")
-	}
-
-	return targetEntry, nil
 }
