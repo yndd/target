@@ -29,15 +29,15 @@ spec:
       name: READY
       type: string
     - description: address to connect to the target'
-      jsonPath: .spec.target.address
+      jsonPath: .spec.properties.config.address
       name: ADDRESS
       type: string
     - description: Protocol used to communicate to the target
-      jsonPath: .spec.target.protocol
+      jsonPath: .spec.properties.config.protocol
       name: PROTOCOL
       type: string
     - description: VendorType of target
-      jsonPath: .status.discoveryInfo.vendorType
+      jsonPath: .status.discoveryInfo.vendor-type
       name: VENDORTYPE
       type: string
     - description: Kind of target
@@ -45,15 +45,15 @@ spec:
       name: KIND
       type: string
     - description: SW version of the target
-      jsonPath: .status.discoveryInfo.swVersion
+      jsonPath: .status.discoveryInfo.sw-version
       name: SWVERSION
       type: string
     - description: macAddress of the target
-      jsonPath: .status.discoveryInfo.macAddress
+      jsonPath: .status.discoveryInfo.mac-address
       name: MACADDRESS
       type: string
     - description: serialNumber of the target
-      jsonPath: .status.discoveryInfo.serialNumber
+      jsonPath: .status.discoveryInfo.serial-number
       name: SERIALNBR
       type: string
     - jsonPath: .metadata.creationTimestamp

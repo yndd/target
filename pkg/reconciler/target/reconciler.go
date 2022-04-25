@@ -39,7 +39,7 @@ import (
 
 const (
 	// timers
-	targetFinalizerName = "finalizer.target.dvr.ndd.yndd.io"
+	targetFinalizerName  = "finalizer.target.dvr.ndd.yndd.io"
 	reconcileGracePeriod = 30 * time.Second
 	reconcileTimeout     = 1 * time.Minute
 	shortWait            = 30 * time.Second
@@ -255,6 +255,7 @@ func (r *Reconciler) Reconcile(_ context.Context, req reconcile.Request) (reconc
 				// backoff.
 				log.Debug("Cannot remove managed resource finalizer", "error", err)
 				t.SetConditions(nddv1.ReconcileError(err), nddv1.Unknown())
+				t.SetDiscoveryInfo(nil)
 				return reconcile.Result{Requeue: true}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
 			}
 
@@ -268,6 +269,7 @@ func (r *Reconciler) Reconcile(_ context.Context, req reconcile.Request) (reconc
 
 		record.Event(t, event.Warning(reasonCannotConnect, err))
 		t.SetConditions(nddv1.ReconcileError(errors.Wrap(err, errReconcileConnect)), nddv1.Unavailable())
+		t.SetDiscoveryInfo(nil)
 		return reconcile.Result{Requeue: true}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
 	}
 
@@ -278,6 +280,7 @@ func (r *Reconciler) Reconcile(_ context.Context, req reconcile.Request) (reconc
 		log.Debug("Cannot observe", "error", err)
 		record.Event(t, event.Warning(reasonCannotObserve, err))
 		t.SetConditions(nddv1.ReconcileError(errors.Wrap(err, errReconcileObserve)), nddv1.Unavailable())
+		t.SetDiscoveryInfo(nil)
 		return reconcile.Result{Requeue: true}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
 	}
 	log.Debug("observe", "observation", observation)
@@ -290,6 +293,7 @@ func (r *Reconciler) Reconcile(_ context.Context, req reconcile.Request) (reconc
 				log.Debug("Cannot delete external resource", "error", err)
 				record.Event(t, event.Warning(reasonCannotDelete, err))
 				t.SetConditions(nddv1.ReconcileError(errors.Wrap(err, errReconcileDelete)), nddv1.Unavailable())
+				t.SetDiscoveryInfo(nil)
 				return reconcile.Result{Requeue: true}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
 			}
 
@@ -303,6 +307,7 @@ func (r *Reconciler) Reconcile(_ context.Context, req reconcile.Request) (reconc
 			// log.Debug("Successfully requested deletion of external resource")
 			record.Event(t, event.Normal(reasonDeleted, "Successfully requested deletion of external resource"))
 			t.SetConditions(nddv1.ReconcileSuccess(), nddv1.Deleting())
+			t.SetDiscoveryInfo(nil)
 			return reconcile.Result{RequeueAfter: veryShortWait}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
 		}
 
@@ -310,6 +315,7 @@ func (r *Reconciler) Reconcile(_ context.Context, req reconcile.Request) (reconc
 		if err := r.finalizer.RemoveFinalizer(ctx, t); err != nil {
 			log.Debug("Cannot remove target cr finalizer", "error", err)
 			t.SetConditions(nddv1.ReconcileError(err), nddv1.Unavailable())
+			t.SetDiscoveryInfo(nil)
 			return reconcile.Result{Requeue: true}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
 		}
 		return reconcile.Result{Requeue: false}, nil
@@ -319,6 +325,7 @@ func (r *Reconciler) Reconcile(_ context.Context, req reconcile.Request) (reconc
 	if err := r.finalizer.AddFinalizer(ctx, t); err != nil {
 		log.Debug("Cannot add finalizer", "error", err)
 		t.SetConditions(nddv1.ReconcileError(err), nddv1.Unavailable())
+		t.SetDiscoveryInfo(nil)
 		return reconcile.Result{Requeue: true}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
 	}
 
@@ -334,6 +341,7 @@ func (r *Reconciler) Reconcile(_ context.Context, req reconcile.Request) (reconc
 				log.Debug("Cannot delete external resource", "error", err)
 				record.Event(t, event.Warning(reasonCannotDelete, err))
 				t.SetConditions(nddv1.ReconcileError(errors.Wrap(err, errReconcileDelete)), nddv1.Unavailable())
+				t.SetDiscoveryInfo(nil)
 				return reconcile.Result{Requeue: true}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
 			}
 
@@ -347,12 +355,14 @@ func (r *Reconciler) Reconcile(_ context.Context, req reconcile.Request) (reconc
 			// log.Debug("Successfully requested deletion of external resource")
 			record.Event(t, event.Normal(reasonDeleted, "Successfully requested deletion of external resource"))
 			t.SetConditions(nddv1.ReconcileSuccess(), nddv1.Deleting())
+			t.SetDiscoveryInfo(nil)
 			return reconcile.Result{RequeueAfter: veryShortWait}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
 		}
 
 		log.Debug(errCredentials, "error", err)
 		r.record.Event(t, event.Warning(reasonSync, errors.Wrap(err, errCredentials)))
 		t.SetConditions(nddv1.ReconcileSuccess(), targetv1.InvalidCredentials())
+		t.SetDiscoveryInfo(nil)
 		return reconcile.Result{RequeueAfter: shortWait}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
 	}
 
@@ -367,6 +377,7 @@ func (r *Reconciler) Reconcile(_ context.Context, req reconcile.Request) (reconc
 			log.Debug("Cannot create external resource", "error", err)
 			record.Event(t, event.Warning(reasonCannotCreate, err))
 			t.SetConditions(nddv1.ReconcileError(errors.Wrap(err, errReconcileCreate)), nddv1.Unavailable())
+			t.SetDiscoveryInfo(nil)
 			return reconcile.Result{RequeueAfter: veryShortWait}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
 		}
 		t.SetConditions(nddv1.Creating())
@@ -378,6 +389,7 @@ func (r *Reconciler) Reconcile(_ context.Context, req reconcile.Request) (reconc
 		//log.Debug("Successfully requested creation of external resource")
 		record.Event(t, event.Normal(reasonCreated, "Successfully requested creation of external resource"))
 		t.SetConditions(nddv1.ReconcileSuccess())
+		t.SetDiscoveryInfo(nil)
 		return reconcile.Result{RequeueAfter: veryShortWait}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
 
 	} else {
@@ -388,6 +400,7 @@ func (r *Reconciler) Reconcile(_ context.Context, req reconcile.Request) (reconc
 				log.Debug("Cannot delete external resource", "error", err)
 				record.Event(t, event.Warning(reasonCannotDelete, err))
 				t.SetConditions(nddv1.ReconcileError(errors.Wrap(err, errReconcileDelete)), nddv1.Unavailable())
+				t.SetDiscoveryInfo(nil)
 				return reconcile.Result{Requeue: true}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
 			}
 
@@ -401,12 +414,14 @@ func (r *Reconciler) Reconcile(_ context.Context, req reconcile.Request) (reconc
 			// log.Debug("Successfully requested deletion of external resource")
 			record.Event(t, event.Normal(reasonDeleted, "Successfully requested deletion of external resource"))
 			t.SetConditions(nddv1.ReconcileSuccess(), nddv1.Deleting())
+			t.SetDiscoveryInfo(nil)
 			return reconcile.Result{RequeueAfter: veryShortWait}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
 		}
 	}
 
 	if !observation.Discovered {
 		// if the observation is not discovered it means the discovery is not completed and we need to reconcile
+		t.SetDiscoveryInfo(nil)
 		return reconcile.Result{RequeueAfter: shortWait}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
 	}
 	t.SetDiscoveryInfo(observation.DiscoveryInfo)

@@ -9,6 +9,7 @@ spec:
     admin-state: enable
     vendor-type: nokia-srl
     config:
+      protocol: gnmi
       address: 172.20.20.5:57400
       credential-name: srl-secrets
       encoding: JSON_IETF
