@@ -32,6 +32,7 @@ import (
 	"github.com/yndd/ndd-runtime/pkg/model"
 	"github.com/yndd/ndd-runtime/pkg/utils"
 	targetv1 "github.com/yndd/ndd-target-runtime/apis/dvr/v1"
+	"github.com/yndd/ndd-target-runtime/pkg/cachename"
 	"github.com/yndd/ndd-target-runtime/pkg/ygotnddtarget"
 	"github.com/yndd/ndd-yang/pkg/yparser"
 	"google.golang.org/grpc/codes"
@@ -39,8 +40,6 @@ import (
 )
 
 const (
-	// target
-	TargetCachePrefix = "target"
 	// errors
 	errJSONMarshal     = "cannot marshal JSON object"
 	errObserveResource = "cannot observe Target"
@@ -129,7 +128,7 @@ func (e *external) Observe(ctx context.Context, namespace string, tspec *ygotndd
 	crTarget := strings.Join([]string{namespace, *tspec.Name}, ".")
 
 	req := &gnmi.GetRequest{
-		Prefix:   &gnmi.Path{Target: crTarget, Origin: TargetCachePrefix},
+		Prefix:   &gnmi.Path{Target: crTarget, Origin: cachename.TargetCachePrefix},
 		Path:     []*gnmi.Path{{}},
 		Encoding: gnmi.Encoding_JSON,
 	}
@@ -223,7 +222,7 @@ func (e *external) Create(ctx context.Context, namespace string, tspec *ygotnddt
 	crTarget := strings.Join([]string{namespace, *tspec.Name}, ".")
 
 	req := &gnmi.SetRequest{
-		Prefix:   &gnmi.Path{Target: crTarget, Origin: TargetCachePrefix},
+		Prefix:  &gnmi.Path{Target: crTarget, Origin: cachename.TargetCachePrefix},
 		Replace: updates,
 	}
 
@@ -242,7 +241,7 @@ func (e *external) Delete(ctx context.Context, namespace string, tspec *ygotnddt
 	crTarget := strings.Join([]string{namespace, *tspec.Name}, ".")
 
 	req := &gnmi.SetRequest{
-		Prefix:   &gnmi.Path{Target: crTarget, Origin: TargetCachePrefix},
+		Prefix: &gnmi.Path{Target: crTarget, Origin: cachename.TargetCachePrefix},
 		Delete: []*gnmi.Path{},
 	}
 
