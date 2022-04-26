@@ -49,15 +49,15 @@ type Target interface {
 }
 
 // Targets interface to register target types that implement the Target interface
-type Targets interface {
+type TargetRegistry interface {
 	// RegisterInitializer registers the vendor type and its respective initialize function
 	RegisterInitializer(name ygotnddtarget.E_NddTarget_VendorType, initFn Initializer)
 	// Initialize returns a Target which implements the Target interface according the vendor type
 	Initialize(name ygotnddtarget.E_NddTarget_VendorType) (Target, error)
 }
 
-// NewTargetsMgr create a registery for target vendor types that implement the Target interface
-func NewTargetsMgr() Targets {
+// NewTargetRegistry create a registery for target vendor types that implement the Target interface
+func NewTargetRegistry() TargetRegistry {
 	return &targets{
 		targets: map[ygotnddtarget.E_NddTarget_VendorType]Initializer{},
 	}
