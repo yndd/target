@@ -18,6 +18,8 @@ package target
 
 import (
 	"context"
+	"fmt"
+	"sync"
 
 	gapi "github.com/karimra/gnmic/api"
 	gnmictarget "github.com/karimra/gnmic/target"
@@ -30,17 +32,15 @@ import (
 type Target interface {
 	// Init initializes the device
 	Init(...TargetOption) error
-	// WithTarget, initializes the device target
+	// WithTarget, initializes the gnmic target
 	WithTarget(target *gnmictarget.Target)
-	// WithLogging initializes the device logging
+	// WithLogging initializes the target logger
 	WithLogging(log logging.Logger)
-	// Discover, discovers the device and its respective data
+	// Discover, discovers the target and its respective data
 	Discover(ctx context.Context) (*targetv1.DiscoveryInfo, error)
-	// retrieve the device capabilities
+	// retrieve the target capabilities
 	GNMICap(ctx context.Context) (*gnmi.CapabilityResponse, error)
-	// retrieve device supported models using gNMI capabilities RPC
-	//SupportedModels(ctx context.Context) ([]*gnmi.ModelData, error)
-	// GetConfig, gets the config from the device
+	// GetConfig, gets the config from the target
 	GetConfig(ctx context.Context) (interface{}, error)
 	// Get, gets the gnmi path from the tree
 	GNMIGet(ctx context.Context, opts ...gapi.GNMIOption) (*gnmi.GetResponse, error)
@@ -48,32 +48,73 @@ type Target interface {
 	GNMISet(ctx context.Context, updates []*gnmi.Update, deletes []*gnmi.Path) (*gnmi.SetResponse, error)
 }
 
-var Targets = map[ygotnddtarget.E_NddTarget_VendorType]Initializer{}
+// Targets interface to register target types that implement the Target interface
+type Targets interface {
+	// RegisterInitializer registers the vendor type and its respective initialize function
+	RegisterInitializer(name ygotnddtarget.E_NddTarget_VendorType, initFn Initializer)
+	// Initialize returns a Target which implements the Target interface according the vendor type
+	Initialize(name ygotnddtarget.E_NddTarget_VendorType) (Target, error)
+}
+
+// NewTargetsMgr create a registery for target vendor types that implement the Target interface
+func NewTargetsMgr() Targets {
+	return &targets{
+		targets: map[ygotnddtarget.E_NddTarget_VendorType]Initializer{},
+	}
+}
+
+type targets struct {
+	m       sync.RWMutex
+	targets map[ygotnddtarget.E_NddTarget_VendorType]Initializer
+}
+
+func (t *targets) RegisterInitializer(name ygotnddtarget.E_NddTarget_VendorType, initFn Initializer) {
+	t.m.Lock()
+	defer t.m.Unlock()
+	t.targets[name] = initFn
+}
+
+func (t *targets) Initialize(name ygotnddtarget.E_NddTarget_VendorType) (Target, error) {
+	t.m.Lock()
+	defer t.m.Unlock()
+	targetInitializer, ok := t.targets[name]
+	if !ok {
+		return nil, fmt.Errorf("target not registered: %s\n", name.String())
+	}
+	target := targetInitializer()
+	return target, nil
+}
+
+//var Targets = map[ygotnddtarget.E_NddTarget_VendorType]Initializer{}
 
 type Initializer func() Target
 
-func Register(name ygotnddtarget.E_NddTarget_VendorType, initFn Initializer) {
-	Targets[name] = initFn
-}
+//func Register(name ygotnddtarget.E_NddTarget_VendorType, initFn Initializer) {
+//	Targets[name] = initFn
+//}
 
 type TargetOption func(Target)
 
+// WithTarget, initializes the gnmic target
 func WithTarget(target *gnmictarget.Target) TargetOption {
 	return func(t Target) {
 		t.WithTarget(target)
 	}
 }
 
+// WithLogging initializes the target logger
 func WithLogging(log logging.Logger) TargetOption {
 	return func(t Target) {
 		t.WithLogging(log)
 	}
 }
 
+// GetSupportedModels returns the modeData from the gnmi capabilities
 func GetSupportedModels(cap *gnmi.CapabilityResponse) []*gnmi.ModelData {
 	return cap.SupportedModels
 }
 
+// GetSupportedEncodings retuns the encodings from the gnmi capabilities
 func GetSupportedEncodings(cap *gnmi.CapabilityResponse) []string {
 	enc := []string{}
 	for _, e := range cap.SupportedEncodings {
