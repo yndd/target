@@ -32,7 +32,7 @@ import (
 	"github.com/yndd/ndd-runtime/pkg/model"
 	"github.com/yndd/ndd-runtime/pkg/utils"
 	targetv1 "github.com/yndd/ndd-target-runtime/apis/dvr/v1"
-	"github.com/yndd/ndd-target-runtime/pkg/cachename"
+	"github.com/yndd/ndd-target-runtime/internal/cachename"
 	"github.com/yndd/ndd-target-runtime/pkg/ygotnddtarget"
 	"github.com/yndd/ndd-yang/pkg/yparser"
 	"google.golang.org/grpc/codes"

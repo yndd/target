@@ -1511,6 +1511,7 @@ github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8/go.mod h1:HUYIGzjTL3rfEspMx
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:aYKd//L2LvnjZzWKhF00oedf4jCCReLcmhLdhm1A27Q=
 github.com/yndd/ndd-core v0.1.6/go.mod h1:zlQTBILqiJlYj3WYy0yHGBBIMZemhVXoNnXE4vhF+pI=
+github.com/yndd/ndd-core v0.1.7 h1:bZ3DwWINIpzgsh7p0iPVCRdTBlcphUJXDh3uTfK8hUA=
 github.com/yndd/ndd-core v0.1.7/go.mod h1:zlQTBILqiJlYj3WYy0yHGBBIMZemhVXoNnXE4vhF+pI=
 github.com/yndd/ndd-runtime v0.1.1/go.mod h1:H9878DK7V5xxs4bi1pMrWPZJ6/+X3MqpKaErDPkcLs4=
 github.com/yndd/ndd-runtime v0.1.2/go.mod h1:Y07uIZQgSqz5h3UeAYp24JyDjugH0T/zeACjNFVnBes=
@@ -1538,12 +1539,14 @@ github.com/yndd/nddo-runtime v0.0.54/go.mod h1:kuq62NH3WPNOQSwslitG0gFAGEwywcmaC
 github.com/yndd/nddo-runtime v0.0.56/go.mod h1:kuq62NH3WPNOQSwslitG0gFAGEwywcmaC9bQQ2cOm0o=
 github.com/yndd/nddo-runtime v0.0.65/go.mod h1:kuq62NH3WPNOQSwslitG0gFAGEwywcmaC9bQQ2cOm0o=
 github.com/yndd/nddo-runtime v0.0.68/go.mod h1:hAZfe7MPU7dMpBz25FTE56hElB5Cgw9ADKMqZ4gJw5k=
+github.com/yndd/nddo-runtime v0.0.72 h1:06fLi8puy5AKMYroWklI4Dbis4ltKkNW2SxHl6vxXV4=
 github.com/yndd/nddo-runtime v0.0.72/go.mod h1:eSZogwj8QTfxO6134fdd93h1KfezKDJr4BP8Ew4fkCA=
 github.com/yndd/nddo-vpc v0.0.4/go.mod h1:muTApxdcuYwWrjM/Zrsq4pXWetshIaiXikoa8+Tv+AA=
 github.com/yndd/nddo-vpc v0.0.5/go.mod h1:l98TClQHm2TtC2dSL1REEvBXiX+Vj/MigwnWpY/ZuvQ=
 github.com/yndd/nddp-srl3 v0.0.1/go.mod h1:lPjUIiSfdBiOjyWsdHbPu9gaLO7D2Q5ROjmw13MxmU4=
 github.com/yndd/nddp-system v0.0.25/go.mod h1:430zJYP2NTxa+wOOC1ANuTMdW6WqRwsgz6n4wqGz5JA=
 github.com/yndd/nddp-system v0.0.30/go.mod h1:5yZZvSmaCcSxag0kK9r1j1Sf7Kh/JS5bq3oeGYaGdbQ=
+github.com/yndd/nddp-system v0.1.6 h1:r4MsSosMF8w4l887ZTOhp6qeDnCEDdilFYaU+PnOmV4=
 github.com/yndd/nddp-system v0.1.6/go.mod h1:de07SAGt/KWH6n3pSRCNt9Ylty1jhSqCmbFtglvvXaI=
 github.com/yndd/nddr-as-registry v0.0.7/go.mod h1:0vg7+8qzSOpgDceLygIYvQ6s3uXh2iV8QEVjs9yn880=
 github.com/yndd/nddr-ipam-registry v0.0.3/go.mod h1:yFXaQkcSNQz0PmLuAVDThROE4x794A66ydXRISRD+dw=
@@ -1814,6 +1817,7 @@ golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a/go.mod h1:RxMgew5VJxzue5/jJ
 golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20201207232520-09787c993a3a/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
+golang.org/x/sync v0.0.0-20210220032951-036812b2e83c h1:5KslGYwFpkhGh+Q16bwMP3cOontH8FOep7tGV86Y7SQ=
 golang.org/x/sync v0.0.0-20210220032951-036812b2e83c/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sys v0.0.0-20180823144017-11551d06cbcc/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20180830151530-49385e6e1522/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=

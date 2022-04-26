@@ -8,8 +8,11 @@ require (
 	github.com/openconfig/goyang v1.0.0
 	github.com/openconfig/ygot v0.17.0
 	github.com/pkg/errors v0.9.1
+	github.com/yndd/ndd-core v0.1.7
 	github.com/yndd/ndd-runtime v0.5.1
 	github.com/yndd/ndd-yang v0.2.0
+	github.com/yndd/nddp-system v0.1.6
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	google.golang.org/grpc v1.43.0
 	k8s.io/api v0.23.6
 	k8s.io/apimachinery v0.23.6
@@ -110,6 +113,7 @@ require (
 	github.com/stoewer/go-strcase v1.2.0 // indirect
 	github.com/ugorji/go/codec v1.2.6 // indirect
 	github.com/xanzy/ssh-agent v0.3.1 // indirect
+	github.com/yndd/nddo-runtime v0.0.72 // indirect
 	github.com/zealic/xignore v0.3.3 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
 	go.opencensus.io v0.23.0 // indirect
