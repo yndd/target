@@ -49,7 +49,7 @@ func (s *GnmiServerImpl) Set(ctx context.Context, req *gnmi.SetRequest) (*gnmi.S
 	numDeletes := len(req.GetDelete())
 	if numUpdates+numReplaces+numDeletes == 0 {
 		// for origin == target cache updates we can have an empty path
-		if prefix.GetOrigin() == cachename.TargetCachePrefix {
+		if prefix.GetOrigin() != cachename.TargetCachePrefix {
 			return nil, status.Errorf(codes.InvalidArgument, errMissingPathsInGNMISet)
 		}
 	}

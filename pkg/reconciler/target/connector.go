@@ -20,7 +20,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/karimra/gnmic/target"
@@ -125,7 +124,7 @@ func (e *external) Observe(ctx context.Context, namespace string, tspec *ygotndd
 	log := e.log.WithValues("Target", tspec.Name)
 	log.Debug("Observing ...")
 
-	crTarget := strings.Join([]string{namespace, *tspec.Name}, ".")
+	crTarget := cachename.GetNamespacedName(namespace, *tspec.Name)
 
 	req := &gnmi.GetRequest{
 		Prefix:   &gnmi.Path{Target: crTarget, Origin: cachename.TargetCachePrefix},
@@ -219,7 +218,7 @@ func (e *external) Create(ctx context.Context, namespace string, tspec *ygotnddt
 		return errors.Wrap(err, errCreateResource)
 	}
 
-	crTarget := strings.Join([]string{namespace, *tspec.Name}, ".")
+	crTarget := cachename.GetNamespacedName(namespace, *tspec.Name)
 
 	req := &gnmi.SetRequest{
 		Prefix:  &gnmi.Path{Target: crTarget, Origin: cachename.TargetCachePrefix},
@@ -238,7 +237,7 @@ func (e *external) Delete(ctx context.Context, namespace string, tspec *ygotnddt
 	log := e.log.WithValues("Target", tspec.Name)
 	log.Debug("Deleting ...")
 
-	crTarget := strings.Join([]string{namespace, *tspec.Name}, ".")
+	crTarget := cachename.GetNamespacedName(namespace, *tspec.Name)
 
 	req := &gnmi.SetRequest{
 		Prefix: &gnmi.Path{Target: crTarget, Origin: cachename.TargetCachePrefix},
