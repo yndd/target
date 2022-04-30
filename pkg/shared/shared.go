@@ -25,6 +25,6 @@ type NddControllerOptions struct {
 	Logger      logging.Logger
 	Poll        time.Duration
 	Namespace   string
-	ConfigNAme  string
+	ConfigName  string
 	GnmiAddress string
 }
