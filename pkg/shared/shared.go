@@ -22,9 +22,10 @@ import (
 )
 
 type NddControllerOptions struct {
-	Logger      logging.Logger
-	Poll        time.Duration
-	Namespace   string
-	Revision    string
-	GnmiAddress string
+	Logger            logging.Logger
+	Poll              time.Duration
+	Namespace         string
+	Revision          string
+	RevisionNamespace string
+	GnmiAddress       string
 }
