@@ -50,13 +50,14 @@ const (
 	defaultGnmiTimeout   = 5 * time.Second
 
 	// errors
-	errGetTarget        = "cannot get target cr"
-	errUpdateStatus     = "cannot update status of the target cr"
-	errCredentials      = "invalid credentials"
-	errReconcileConnect = "cannot connect to external connector"
-	errReconcileObserve = "cannot observe external resource"
-	errReconcileCreate  = "cannot create external resource"
-	errReconcileDelete  = "cannot delete external resource"
+	errGetTarget         = "cannot get target cr"
+	errUpdateStatus      = "cannot update status of the target cr"
+	errCredentials       = "invalid credentials"
+	errReconcileConnect  = "cannot connect to external connector"
+	errReconcileObserve  = "cannot observe external resource"
+	errReconcileCreate   = "cannot create external resource"
+	errReconcileDelete   = "cannot delete external resource"
+	errHasOtherFinalizer = "cannot get other finalizer"
 
 	//event
 	reasonSync          event.Reason = "SyncTarget"
@@ -294,6 +295,16 @@ func (r *Reconciler) Reconcile(_ context.Context, req reconcile.Request) (reconc
 	log.Debug("Health status", "status", t.GetCondition(nddv1.ConditionKindReady).Status)
 	if meta.WasDeleted(t) {
 		// CHECK IF A TARGETDRIVER WAS RUNNING -> IF SO DELETE IT
+		otherFInalizer, err := r.finalizer.HasOtherFinalizer(ctx, t)
+		if err != nil {
+			log.Debug("has other finalizer", "error", err)
+			t.SetConditions(nddv1.ReconcileError(errors.Wrap(err, errHasOtherFinalizer)), nddv1.Unavailable())
+			t.SetDiscoveryInfo(nil)
+			return reconcile.Result{Requeue: true}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
+		}
+		if otherFInalizer {
+			return reconcile.Result{RequeueAfter: veryShortWait}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
+		}
 		if observation.Exists {
 			if err := external.Delete(ctx, req.Namespace, tspec); err != nil {
 				log.Debug("Cannot delete external resource", "error", err)

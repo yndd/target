@@ -19,7 +19,6 @@ package resource
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/pkg/errors"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -189,14 +188,12 @@ func (a *APIFinalizer) AddFinalizerString(ctx context.Context, obj Object, final
 // RemoveFinalizer from the supplied Managed resource.
 func (a *APIFinalizer) RemoveFinalizerString(ctx context.Context, obj Object, finalizerString string) error {
 	f := obj.GetFinalizers()
-	fmt.Printf("RemoveFinalizerString finalizers start: %v\n", obj.GetFinalizers())
 	for _, ff := range f {
 		if ff == finalizerString {
 			f = utils.RemoveString(f, ff)
 			obj.SetFinalizers(f)
 		}
 	}
-	fmt.Printf("RemoveFinalizerString finalizers end: %v\n", obj.GetFinalizers())
 	return errors.Wrap(IgnoreNotFound(a.client.Update(ctx, obj)), errUpdateObject)
 }
 
@@ -242,3 +239,5 @@ func (f FinalizerFns) AddFinalizerString(ctx context.Context, obj Object, finali
 func (f FinalizerFns) RemoveFinalizerString(ctx context.Context, obj Object, finalizerString string) error {
 	return f.RemoveFinalizerStringFn(ctx, obj, finalizerString)
 }
+
+
