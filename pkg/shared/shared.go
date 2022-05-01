@@ -29,4 +29,5 @@ type NddControllerOptions struct {
 	Revision             string
 	RevisionNamespace    string
 	GnmiAddress          string
+	CrdNames             []string
 }
