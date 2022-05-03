@@ -9,7 +9,7 @@ require (
 	github.com/openconfig/ygot v0.17.0
 	github.com/pkg/errors v0.9.1
 	github.com/yndd/ndd-core v0.1.7
-	github.com/yndd/ndd-runtime v0.5.6
+	github.com/yndd/ndd-runtime v0.5.8
 	github.com/yndd/ndd-yang v0.2.8
 	github.com/yndd/nddp-system v0.2.4
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
