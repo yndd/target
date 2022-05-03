@@ -27,7 +27,7 @@ import (
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/ndd-runtime/pkg/model"
 	"github.com/yndd/ndd-target-runtime/internal/cache"
-	"github.com/yndd/ndd-target-runtime/internal/cachename"
+	"github.com/yndd/ndd-target-runtime/pkg/cachename"
 	"github.com/yndd/ndd-target-runtime/internal/gnmiserver"
 	"github.com/yndd/ndd-target-runtime/pkg/resource"
 	"github.com/yndd/ndd-target-runtime/pkg/target"

@@ -29,7 +29,7 @@ import (
 	"github.com/openconfig/ygot/ygot"
 	"github.com/openconfig/ygot/ytypes"
 	"github.com/yndd/ndd-runtime/pkg/model"
-	"github.com/yndd/ndd-target-runtime/internal/cachename"
+	"github.com/yndd/ndd-target-runtime/pkg/cachename"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

@@ -25,7 +25,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/yndd/ndd-target-runtime/internal/cache"
 	"github.com/yndd/ndd-runtime/pkg/logging"
-	"github.com/yndd/ndd-target-runtime/internal/cachename"
+	"github.com/yndd/ndd-target-runtime/pkg/cachename"
 	"github.com/yndd/ndd-target-runtime/pkg/target"
 	"google.golang.org/grpc"
 )
