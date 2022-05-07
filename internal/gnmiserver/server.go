@@ -30,6 +30,7 @@ import (
 	"github.com/yndd/ndd-target-runtime/internal/targetchannel"
 	"golang.org/x/sync/semaphore"
 	"google.golang.org/grpc"
+	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 )
 
@@ -96,6 +97,7 @@ type config struct {
 
 type GnmiServerImpl struct {
 	gnmi.UnimplementedGNMIServer
+	healthgrpc.UnimplementedHealthServer
 
 	cfg *config
 
