@@ -18,8 +18,10 @@ package gnmiserver
 
 import (
 	"context"
+	"crypto/tls"
 	"net"
 	"strconv"
+	"strings"
 
 	"github.com/openconfig/gnmi/match"
 	"github.com/openconfig/gnmi/proto/gnmi"
@@ -30,6 +32,7 @@ import (
 	"github.com/yndd/ndd-target-runtime/internal/targetchannel"
 	"golang.org/x/sync/semaphore"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 )
@@ -38,6 +41,7 @@ const (
 	// defaults
 	defaultMaxSubscriptions = 64
 	defaultMaxGetRPC        = 1024
+	certDir                 = "/tmp/k8s-gnmi-server/serving-certs/"
 )
 
 // Option can be used to manipulate Options.
@@ -181,15 +185,14 @@ func (s *GnmiServerImpl) run() error {
 		return errors.Wrap(err, "cannot listen")
 	}
 
-	// TODO, proper handling of the certificates with CERT Manager
-	/*
-		opts, err := s.serverOpts()
-		if err != nil {
-			return err
-		}
-	*/
+	// get server options for certificates
+	opts, err := s.serverOpts()
+	if err != nil {
+		return err
+	}
+
 	// create a gRPC server object
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(opts...)
 
 	// attach the gnmi service to the grpc server
 	gnmi.RegisterGNMIServer(grpcServer, s)
@@ -203,4 +206,31 @@ func (s *GnmiServerImpl) run() error {
 		return errors.Wrap(err, "cannot serve grpc server")
 	}
 	return nil
+}
+
+func (s *GnmiServerImpl) serverOpts() ([]grpc.ServerOption, error) {
+	opts := make([]grpc.ServerOption, 0)
+	tlscfg, err := loadTLSCredentials()
+	if err != nil {
+		return nil, err
+	}
+	opts = append(opts, grpc.Creds(credentials.NewTLS(tlscfg)))
+	return opts, nil
+
+}
+
+func loadTLSCredentials() (*tls.Config, error) {
+	// Load server's certificate and private key
+	certFile := strings.Join([]string{certDir, "tls.crt"}, "/")
+	keyFile := strings.Join([]string{certDir, "tls.key"}, "/")
+	serverCert, err := tls.LoadX509KeyPair(certFile, keyFile)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create the credentials and return it
+	return &tls.Config{
+		Certificates: []tls.Certificate{serverCert},
+		ClientAuth:   tls.NoClientCert,
+	}, nil
 }
