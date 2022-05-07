@@ -24,6 +24,7 @@ import (
 
 // Check implements `service Health`.
 func (s *GnmiServerImpl) Check(ctx context.Context, in *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {
+	s.log.Debug("gnmi server health check", "service", in.Service)
 	return &healthpb.HealthCheckResponse{
 		Status: healthpb.HealthCheckResponse_SERVING,
 	}, nil
