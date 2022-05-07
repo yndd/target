@@ -204,6 +204,7 @@ func (s *GnmiServerImpl) run() error {
 
 	// attach the gnmi service to the grpc server
 	gnmi.RegisterGNMIServer(grpcServer, s)
+	healthgrpc.RegisterHealthServer(grpcServer, s)
 	// attach the gRPC service to the server
 	//resourcepb.RegisterResourceServer(grpcServer, s)
 
