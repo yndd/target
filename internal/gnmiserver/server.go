@@ -22,8 +22,9 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"sync"
 
-	"github.com/openconfig/gnmi/match"
+	//"github.com/openconfig/gnmi/match"
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/pkg/errors"
 	pkgmetav1 "github.com/yndd/ndd-core/apis/pkg/meta/v1"
@@ -34,6 +35,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 )
 
@@ -113,10 +115,14 @@ type GnmiServerImpl struct {
 	// schema
 	cache cache.Cache
 	//stateCache  *cache.Cache
-	m *match.Match // only used for statecache for now -> TBD if we need to make this more
+	//m *match.Match // only used for statecache for now -> TBD if we need to make this more
 	// gnmi calls
 	subscribeRPCsem *semaphore.Weighted
 	unaryRPCsem     *semaphore.Weighted
+	// health: statusMap stores the serving status of the services this Server monitors.
+	mu        sync.RWMutex
+	statusMap map[string]healthpb.HealthCheckResponse_ServingStatus
+	updates   map[string]map[healthgrpc.Health_WatchServer]chan healthpb.HealthCheckResponse_ServingStatus
 	// logging and parsing
 	log logging.Logger
 
@@ -126,11 +132,13 @@ type GnmiServerImpl struct {
 
 func New(opts ...Option) GnmiServer {
 	s := &GnmiServerImpl{
-		m: match.New(),
+		//m: match.New(),
+		statusMap: map[string]healthpb.HealthCheckResponse_ServingStatus{"": healthpb.HealthCheckResponse_SERVING},
+		updates:   make(map[string]map[healthgrpc.Health_WatchServer]chan healthpb.HealthCheckResponse_ServingStatus),
 		cfg: &config{
-			address:    ":" + strconv.Itoa(pkgmetav1.GnmiServerPort),
-			skipVerify: true,
-			inSecure:   true,
+			address: ":" + strconv.Itoa(pkgmetav1.GnmiServerPort),
+			//skipVerify: true,
+			//inSecure:   true,
 		},
 	}
 
