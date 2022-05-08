@@ -1,5 +1,5 @@
 /*
-Copyright 2021 NDD.
+Copyright 2021 NDDO.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package gnmiserver
+package grpcserver
 
 import (
 	"context"
@@ -26,7 +26,7 @@ import (
 )
 
 // Check implements `service Health`.
-func (s *GnmiServerImpl) Check(ctx context.Context, in *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {
+func (s *GrpcServerImpl) Check(ctx context.Context, in *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {
 	s.log.Debug("gnmi server health check", "service", in.Service)
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -40,7 +40,7 @@ func (s *GnmiServerImpl) Check(ctx context.Context, in *healthpb.HealthCheckRequ
 }
 
 // Watch implements `service Health`.
-func (s *GnmiServerImpl) Watch(in *healthpb.HealthCheckRequest, stream healthgrpc.Health_WatchServer) error {
+func (s *GrpcServerImpl) Watch(in *healthpb.HealthCheckRequest, stream healthgrpc.Health_WatchServer) error {
 	s.log.Debug("gnmi server health watch", "service", in.Service)
 
 	//service := in.Service
