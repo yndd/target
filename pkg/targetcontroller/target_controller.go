@@ -27,11 +27,11 @@ import (
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/ndd-runtime/pkg/model"
 	"github.com/yndd/ndd-target-runtime/internal/cache"
+	"github.com/yndd/ndd-target-runtime/internal/targetchannel"
 	"github.com/yndd/ndd-target-runtime/pkg/cachename"
-	"github.com/yndd/ndd-target-runtime/internal/gnmiserver"
+	"github.com/yndd/ndd-target-runtime/pkg/grpcserver"
 	"github.com/yndd/ndd-target-runtime/pkg/resource"
 	"github.com/yndd/ndd-target-runtime/pkg/target"
-	"github.com/yndd/ndd-target-runtime/internal/targetchannel"
 	"github.com/yndd/nddp-system/pkg/ygotnddp"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 )
@@ -126,7 +126,7 @@ type targetControllerImpl struct {
 	client   resource.ClientApplicator
 	eventChs map[string]chan event.GenericEvent
 	// server
-	server gnmiserver.GnmiServer
+	server grpcserver.GrpcServer
 
 	ctx context.Context
 	cfn context.CancelFunc
@@ -216,11 +216,13 @@ func (c *targetControllerImpl) Stop() error {
 func (c *targetControllerImpl) Start() error {
 	c.log.Debug("starting targetdriver...")
 
-	// start gnmi server
-	c.server = gnmiserver.New(
-		gnmiserver.WithCache(c.cache),
-		gnmiserver.WithLogger(c.log),
-		gnmiserver.WithTargetChannel(c.targetCh),
+	// start grpc server
+	c.server = grpcserver.New(
+		grpcserver.WithHealth(true),
+		grpcserver.WithGnmi(true),
+		grpcserver.WithCache(c.cache),
+		grpcserver.WithLogger(c.log),
+		grpcserver.WithTargetChannel(c.targetCh),
 	)
 	if err := c.server.Start(); err != nil {
 		return err
