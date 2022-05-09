@@ -1,5 +1,5 @@
 /*
-Copyright 2021 NDDO.
+Copyright 2021 NDD.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package grpcserver
+package gnmiserver
 
 import (
 	"context"
@@ -43,33 +43,21 @@ const (
 	// defaults
 	defaultMaxSubscriptions = 64
 	defaultMaxGetRPC        = 1024
-	certDir                 = "/tmp/k8s-grpc-server/serving-certs/"
+	certDir                 = "/tmp/k8s-gnmi-server/serving-certs/"
 )
 
 // Option can be used to manipulate Options.
-type Option func(GrpcServer)
-
-func WithHealth(b bool) Option {
-	return func(s GrpcServer) {
-		s.WithHealthService(b)
-	}
-}
-
-func WithGnmi(b bool) Option {
-	return func(s GrpcServer) {
-		s.WithGnmiService(b)
-	}
-}
+type Option func(GnmiServer)
 
 // WithLogger specifies how the Reconciler should log messages.
 func WithLogger(log logging.Logger) Option {
-	return func(s GrpcServer) {
+	return func(s GnmiServer) {
 		s.WithLogger(log)
 	}
 }
 
 func WithCache(c cache.Cache) Option {
-	return func(s GrpcServer) {
+	return func(s GnmiServer) {
 		s.WithCache(c)
 	}
 }
@@ -83,14 +71,12 @@ func WithEventChannels(e map[string]chan event.GenericEvent) Option {
 */
 
 func WithTargetChannel(t chan targetchannel.TargetMsg) Option {
-	return func(s GrpcServer) {
+	return func(s GnmiServer) {
 		s.WithTargetChannel(t)
 	}
 }
 
-type GrpcServer interface {
-	WithHealthService(bool)
-	WithGnmiService(bool)
+type GnmiServer interface {
 	WithLogger(log logging.Logger)
 	WithCache(c cache.Cache)
 	//WithEventChannels(e map[string]chan event.GenericEvent)
@@ -115,11 +101,7 @@ type config struct {
 	//debug         bool
 }
 
-type GrpcServerImpl struct {
-	// capabilities
-	health bool
-	gnmi   bool
-
+type GnmiServerImpl struct {
 	gnmi.UnimplementedGNMIServer
 	healthgrpc.UnimplementedHealthServer
 
@@ -148,8 +130,8 @@ type GrpcServerImpl struct {
 	ctx context.Context
 }
 
-func New(opts ...Option) GrpcServer {
-	s := &GrpcServerImpl{
+func New(opts ...Option) GnmiServer {
+	s := &GnmiServerImpl{
 		//m: match.New(),
 		statusMap: map[string]healthpb.HealthCheckResponse_ServingStatus{"": healthpb.HealthCheckResponse_SERVING},
 		updates:   make(map[string]map[healthgrpc.Health_WatchServer]chan healthpb.HealthCheckResponse_ServingStatus),
@@ -169,31 +151,23 @@ func New(opts ...Option) GrpcServer {
 	return s
 }
 
-func (s *GrpcServerImpl) WithHealthService(b bool) {
-	s.health = b
-}
-
-func (s *GrpcServerImpl) WithGnmiService(b bool) {
-	s.gnmi = b
-}
-
-func (s *GrpcServerImpl) WithLogger(log logging.Logger) {
+func (s *GnmiServerImpl) WithLogger(log logging.Logger) {
 	s.log = log
 }
 
-//func (s *GrpcServerImpl) WithEventChannels(e map[string]chan event.GenericEvent) {
+//func (s *GnmiServerImpl) WithEventChannels(e map[string]chan event.GenericEvent) {
 //	s.eventChannels = e
 //}
 
-func (s *GrpcServerImpl) WithTargetChannel(t chan targetchannel.TargetMsg) {
+func (s *GnmiServerImpl) WithTargetChannel(t chan targetchannel.TargetMsg) {
 	s.targetChannel = t
 }
 
-func (s *GrpcServerImpl) WithCache(c cache.Cache) {
+func (s *GnmiServerImpl) WithCache(c cache.Cache) {
 	s.cache = c
 }
 
-func (s *GrpcServerImpl) Start() error {
+func (s *GnmiServerImpl) Start() error {
 	log := s.log.WithValues("grpcServerAddress", s.cfg.address)
 	log.Debug("grpc server run...")
 	errChannel := make(chan error)
@@ -207,15 +181,11 @@ func (s *GrpcServerImpl) Start() error {
 }
 
 // run GRPC Server
-func (s *GrpcServerImpl) run() error {
+func (s *GnmiServerImpl) run() error {
+	s.subscribeRPCsem = semaphore.NewWeighted(defaultMaxSubscriptions)
+	s.unaryRPCsem = semaphore.NewWeighted(defaultMaxGetRPC)
 	log := s.log.WithValues("grpcServerAddress", s.cfg.address)
 	log.Debug("grpc server start...")
-
-	// when gnmi is enabled initialize the semaphore
-	if s.gnmi {
-		s.subscribeRPCsem = semaphore.NewWeighted(defaultMaxSubscriptions)
-		s.unaryRPCsem = semaphore.NewWeighted(defaultMaxGetRPC)
-	}
 
 	// create a listener on a specific address:port
 	l, err := net.Listen("tcp", s.cfg.address)
@@ -233,12 +203,10 @@ func (s *GrpcServerImpl) run() error {
 	grpcServer := grpc.NewServer(opts...)
 
 	// attach the gnmi service to the grpc server
-	if s.gnmi {
-		gnmi.RegisterGNMIServer(grpcServer, s)
-	}
-	if s.health {
-		healthgrpc.RegisterHealthServer(grpcServer, s)
-	}
+	gnmi.RegisterGNMIServer(grpcServer, s)
+	healthgrpc.RegisterHealthServer(grpcServer, s)
+	// attach the gRPC service to the server
+	//resourcepb.RegisterResourceServer(grpcServer, s)
 
 	// start the server
 	log.Debug("grpc server serve...")
@@ -249,7 +217,7 @@ func (s *GrpcServerImpl) run() error {
 	return nil
 }
 
-func (s *GrpcServerImpl) serverOpts() ([]grpc.ServerOption, error) {
+func (s *GnmiServerImpl) serverOpts() ([]grpc.ServerOption, error) {
 	opts := make([]grpc.ServerOption, 0)
 	tlscfg, err := loadTLSCredentials()
 	if err != nil {

@@ -17,8 +17,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/openconfig/goyang/pkg/yang"
 	"github.com/openconfig/ygot/ygot"
+	"github.com/openconfig/goyang/pkg/yang"
 	"github.com/openconfig/ygot/ytypes"
 )
 
@@ -79,7 +79,7 @@ var (
 func init() {
 	var err error
 	if SchemaTree, err = UnzipSchema(); err != nil {
-		panic("schema error: " + err.Error())
+		panic("schema error: " +  err.Error())
 	}
 }
 
@@ -91,9 +91,9 @@ func Schema() (*ytypes.Schema, error) {
 	}
 
 	return &ytypes.Schema{
-		Root:       &Device{},
+		Root: &Device{},
 		SchemaTree: uzp,
-		Unmarshal:  Unmarshal,
+		Unmarshal: Unmarshal,
 	}, nil
 }
 
@@ -118,7 +118,7 @@ func Unmarshal(data []byte, destStruct ygot.ValidatedGoStruct, opts ...ytypes.Un
 	tn := reflect.TypeOf(destStruct).Elem().Name()
 	schema, ok := SchemaTree[tn]
 	if !ok {
-		return fmt.Errorf("could not find schema for type %s", tn)
+		return fmt.Errorf("could not find schema for type %s", tn )
 	}
 	var jsonTree interface{}
 	if err := json.Unmarshal([]byte(data), &jsonTree); err != nil {
@@ -129,7 +129,7 @@ func Unmarshal(data []byte, destStruct ygot.ValidatedGoStruct, opts ...ytypes.Un
 
 // Device represents the /device YANG schema element.
 type Device struct {
-	TargetEntry map[string]*NddTarget_TargetEntry `path:"target-entry" module:"ndd-target"`
+	TargetEntry	map[string]*NddTarget_TargetEntry	`path:"target-entry" module:"ndd-target"`
 }
 
 // IsYANGGoStruct ensures that Device implements the yang.GoStruct
@@ -140,7 +140,7 @@ func (*Device) IsYANGGoStruct() {}
 // NewTargetEntry creates a new entry in the TargetEntry list of the
 // Device struct. The keys of the list are populated from the input
 // arguments.
-func (t *Device) NewTargetEntry(Name string) (*NddTarget_TargetEntry, error) {
+func (t *Device) NewTargetEntry(Name string) (*NddTarget_TargetEntry, error){
 
 	// Initialise the list within the receiver struct if it has not already been
 	// created.
@@ -167,7 +167,7 @@ func (t *Device) NewTargetEntry(Name string) (*NddTarget_TargetEntry, error) {
 // GetOrCreateTargetEntry retrieves the value with the specified keys from
 // the receiver Device. If the entry does not exist, then it is created.
 // It returns the existing or new list member.
-func (t *Device) GetOrCreateTargetEntry(Name string) *NddTarget_TargetEntry {
+func (t *Device) GetOrCreateTargetEntry(Name string) (*NddTarget_TargetEntry){
 
 	key := Name
 
@@ -187,18 +187,18 @@ func (t *Device) GetOrCreateTargetEntry(Name string) *NddTarget_TargetEntry {
 // the TargetEntry map field of Device. If the receiver is nil, or
 // the specified key is not present in the list, nil is returned such that Get*
 // methods may be safely chained.
-func (t *Device) GetTargetEntry(Name string) *NddTarget_TargetEntry {
+func (t *Device) GetTargetEntry(Name string) (*NddTarget_TargetEntry){
 
 	if t == nil {
 		return nil
 	}
 
-	key := Name
+  key := Name
 
-	if lm, ok := t.TargetEntry[key]; ok {
-		return lm
-	}
-	return nil
+  if lm, ok := t.TargetEntry[key]; ok {
+    return lm
+  }
+  return nil
 }
 
 // DeleteTargetEntry deletes the value with the specified keys from
@@ -253,14 +253,15 @@ func (*Device) ΛBelongingModule() string {
 	return ""
 }
 
+
 // NddTarget_TargetEntry represents the /ndd-target/target-entry YANG schema element.
 type NddTarget_TargetEntry struct {
-	AdminState  E_NddCommon_AdminState        `path:"admin-state" module:"ndd-target"`
-	Config      *NddTarget_TargetEntry_Config `path:"config" module:"ndd-target"`
-	Description *string                       `path:"description" module:"ndd-target"`
-	Name        *string                       `path:"name" module:"ndd-target"`
-	State       *NddTarget_TargetEntry_State  `path:"state" module:"ndd-target"`
-	VendorType  E_NddTarget_VendorType        `path:"vendor-type" module:"ndd-target"`
+	AdminState	E_NddCommon_AdminState	`path:"admin-state" module:"ndd-target"`
+	Config	*NddTarget_TargetEntry_Config	`path:"config" module:"ndd-target"`
+	Description	*string	`path:"description" module:"ndd-target"`
+	Name	*string	`path:"name" module:"ndd-target"`
+	State	*NddTarget_TargetEntry_State	`path:"state" module:"ndd-target"`
+	VendorType	E_NddTarget_VendorType	`path:"vendor-type" module:"ndd-target"`
 }
 
 // IsYANGGoStruct ensures that NddTarget_TargetEntry implements the yang.GoStruct
@@ -337,16 +338,17 @@ func (*NddTarget_TargetEntry) ΛBelongingModule() string {
 	return "ndd-target"
 }
 
+
 // NddTarget_TargetEntry_Config represents the /ndd-target/target-entry/config YANG schema element.
 type NddTarget_TargetEntry_Config struct {
-	Address           *string              `path:"address" module:"ndd-target"`
-	CredentialName    *string              `path:"credential-name" module:"ndd-target"`
-	Encoding          E_NddTarget_Encoding `path:"encoding" module:"ndd-target"`
-	Insecure          *bool                `path:"insecure" module:"ndd-target"`
-	Protocol          E_NddTarget_Protocol `path:"protocol" module:"ndd-target"`
-	Proxy             *string              `path:"proxy" module:"ndd-target"`
-	SkipVerify        *bool                `path:"skip-verify" module:"ndd-target"`
-	TlsCredentialName *string              `path:"tls-credential-name" module:"ndd-target"`
+	Address	*string	`path:"address" module:"ndd-target"`
+	CredentialName	*string	`path:"credential-name" module:"ndd-target"`
+	Encoding	E_NddTarget_Encoding	`path:"encoding" module:"ndd-target"`
+	Insecure	*bool	`path:"insecure" module:"ndd-target"`
+	Protocol	E_NddTarget_Protocol	`path:"protocol" module:"ndd-target"`
+	Proxy	*string	`path:"proxy" module:"ndd-target"`
+	SkipVerify	*bool	`path:"skip-verify" module:"ndd-target"`
+	TlsCredentialName	*string	`path:"tls-credential-name" module:"ndd-target"`
 }
 
 // IsYANGGoStruct ensures that NddTarget_TargetEntry_Config implements the yang.GoStruct
@@ -372,15 +374,16 @@ func (*NddTarget_TargetEntry_Config) ΛBelongingModule() string {
 	return "ndd-target"
 }
 
+
 // NddTarget_TargetEntry_State represents the /ndd-target/target-entry/state YANG schema element.
 type NddTarget_TargetEntry_State struct {
-	Hostname           *string                `path:"hostname" module:"ndd-target"`
-	Kind               *string                `path:"kind" module:"ndd-target"`
-	MacAddress         *string                `path:"mac-address" module:"ndd-target"`
-	SerialNumber       *string                `path:"serial-number" module:"ndd-target"`
-	SupportedEncodings []string               `path:"supported-encodings" module:"ndd-target"`
-	SwVersion          *string                `path:"sw-version" module:"ndd-target"`
-	VendorType         E_NddTarget_VendorType `path:"vendor-type" module:"ndd-target"`
+	Hostname	*string	`path:"hostname" module:"ndd-target"`
+	Kind	*string	`path:"kind" module:"ndd-target"`
+	MacAddress	*string	`path:"mac-address" module:"ndd-target"`
+	SerialNumber	*string	`path:"serial-number" module:"ndd-target"`
+	SupportedEncodings	[]string	`path:"supported-encodings" module:"ndd-target"`
+	SwVersion	*string	`path:"sw-version" module:"ndd-target"`
+	VendorType	E_NddTarget_VendorType	`path:"vendor-type" module:"ndd-target"`
 }
 
 // IsYANGGoStruct ensures that NddTarget_TargetEntry_State implements the yang.GoStruct
@@ -406,6 +409,7 @@ func (*NddTarget_TargetEntry_State) ΛBelongingModule() string {
 	return "ndd-target"
 }
 
+
 // E_NddCommon_AdminState is a derived int64 type which is used to represent
 // the enumerated node NddCommon_AdminState. An additional value named
 // NddCommon_AdminState_UNSET is added to the enumeration which is used as
@@ -419,7 +423,7 @@ type E_NddCommon_AdminState int64
 func (E_NddCommon_AdminState) IsYANGGoEnum() {}
 
 // ΛMap returns the value lookup map associated with  NddCommon_AdminState.
-func (E_NddCommon_AdminState) ΛMap() map[string]map[int64]ygot.EnumDefinition { return ΛEnum }
+func (E_NddCommon_AdminState) ΛMap() map[string]map[int64]ygot.EnumDefinition { return ΛEnum; }
 
 // String returns a logging-friendly string for E_NddCommon_AdminState.
 func (e E_NddCommon_AdminState) String() string {
@@ -435,6 +439,7 @@ const (
 	NddCommon_AdminState_disable E_NddCommon_AdminState = 2
 )
 
+
 // E_NddTarget_Encoding is a derived int64 type which is used to represent
 // the enumerated node NddTarget_Encoding. An additional value named
 // NddTarget_Encoding_UNSET is added to the enumeration which is used as
@@ -448,7 +453,7 @@ type E_NddTarget_Encoding int64
 func (E_NddTarget_Encoding) IsYANGGoEnum() {}
 
 // ΛMap returns the value lookup map associated with  NddTarget_Encoding.
-func (E_NddTarget_Encoding) ΛMap() map[string]map[int64]ygot.EnumDefinition { return ΛEnum }
+func (E_NddTarget_Encoding) ΛMap() map[string]map[int64]ygot.EnumDefinition { return ΛEnum; }
 
 // String returns a logging-friendly string for E_NddTarget_Encoding.
 func (e E_NddTarget_Encoding) String() string {
@@ -470,6 +475,7 @@ const (
 	NddTarget_Encoding_ASCII E_NddTarget_Encoding = 5
 )
 
+
 // E_NddTarget_Protocol is a derived int64 type which is used to represent
 // the enumerated node NddTarget_Protocol. An additional value named
 // NddTarget_Protocol_UNSET is added to the enumeration which is used as
@@ -483,7 +489,7 @@ type E_NddTarget_Protocol int64
 func (E_NddTarget_Protocol) IsYANGGoEnum() {}
 
 // ΛMap returns the value lookup map associated with  NddTarget_Protocol.
-func (E_NddTarget_Protocol) ΛMap() map[string]map[int64]ygot.EnumDefinition { return ΛEnum }
+func (E_NddTarget_Protocol) ΛMap() map[string]map[int64]ygot.EnumDefinition { return ΛEnum; }
 
 // String returns a logging-friendly string for E_NddTarget_Protocol.
 func (e E_NddTarget_Protocol) String() string {
@@ -499,6 +505,7 @@ const (
 	NddTarget_Protocol_netconf E_NddTarget_Protocol = 2
 )
 
+
 // E_NddTarget_VendorType is a derived int64 type which is used to represent
 // the enumerated node NddTarget_VendorType. An additional value named
 // NddTarget_VendorType_UNSET is added to the enumeration which is used as
@@ -512,7 +519,7 @@ type E_NddTarget_VendorType int64
 func (E_NddTarget_VendorType) IsYANGGoEnum() {}
 
 // ΛMap returns the value lookup map associated with  NddTarget_VendorType.
-func (E_NddTarget_VendorType) ΛMap() map[string]map[int64]ygot.EnumDefinition { return ΛEnum }
+func (E_NddTarget_VendorType) ΛMap() map[string]map[int64]ygot.EnumDefinition { return ΛEnum; }
 
 // String returns a logging-friendly string for E_NddTarget_VendorType.
 func (e E_NddTarget_VendorType) String() string {
@@ -529,6 +536,7 @@ const (
 	// NddTarget_VendorType_nokia_sros corresponds to the value nokia_sros of NddTarget_VendorType
 	NddTarget_VendorType_nokia_sros E_NddTarget_VendorType = 3
 )
+
 
 // ΛEnum is a map, keyed by the name of the type defined for each enum in the
 // generated Go code, which provides a mapping between the constant int64 value
@@ -557,6 +565,7 @@ var ΛEnum = map[string]map[int64]ygot.EnumDefinition{
 		3: {Name: "nokia-sros"},
 	},
 }
+
 
 var (
 	// ySchema is a byte slice contain a gzip compressed representation of the
@@ -639,6 +648,7 @@ var (
 	}
 )
 
+
 // ΛEnumTypes is a map, keyed by a YANG schema path, of the enumerated types that
 // correspond with the leaf. The type is represented as a reflect.Type. The naming
 // of the map ensures that there are no clashes with valid YANG identifiers.
@@ -659,3 +669,4 @@ var ΛEnumTypes = map[string][]reflect.Type{
 		reflect.TypeOf((E_NddTarget_VendorType)(0)),
 	},
 }
+
