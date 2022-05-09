@@ -27,7 +27,7 @@ import (
 	//"github.com/openconfig/gnmi/match"
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/pkg/errors"
-	pkgmetav1 "github.com/yndd/ndd-core/apis/pkg/meta/v1"
+
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/ndd-target-runtime/internal/cache"
 	"github.com/yndd/ndd-target-runtime/internal/targetchannel"
@@ -148,13 +148,13 @@ type GrpcServerImpl struct {
 	ctx context.Context
 }
 
-func New(opts ...Option) GrpcServer {
+func New(port int, opts ...Option) GrpcServer {
 	s := &GrpcServerImpl{
 		//m: match.New(),
 		statusMap: map[string]healthpb.HealthCheckResponse_ServingStatus{"": healthpb.HealthCheckResponse_SERVING},
 		updates:   make(map[string]map[healthgrpc.Health_WatchServer]chan healthpb.HealthCheckResponse_ServingStatus),
 		cfg: &config{
-			address: ":" + strconv.Itoa(pkgmetav1.GnmiServerPort),
+			address: ":" + strconv.Itoa(port),
 			//skipVerify: true,
 			//inSecure:   true,
 		},

@@ -25,7 +25,6 @@ import (
 
 	gnmictarget "github.com/karimra/gnmic/target"
 	"github.com/karimra/gnmic/types"
-	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/openconfig/ygot/ygot"
 	"github.com/pkg/errors"
 	"github.com/yndd/ndd-runtime/pkg/logging"
@@ -33,9 +32,9 @@ import (
 	"github.com/yndd/ndd-runtime/pkg/utils"
 	targetv1 "github.com/yndd/ndd-target-runtime/apis/dvr/v1"
 	"github.com/yndd/ndd-target-runtime/internal/cache"
-	"github.com/yndd/ndd-target-runtime/pkg/cachename"
 	"github.com/yndd/ndd-target-runtime/internal/targetcollector"
 	"github.com/yndd/ndd-target-runtime/internal/targetreconciler"
+	"github.com/yndd/ndd-target-runtime/pkg/cachename"
 	"github.com/yndd/ndd-target-runtime/pkg/resource"
 	"github.com/yndd/ndd-target-runtime/pkg/target"
 	"github.com/yndd/ndd-target-runtime/pkg/ygotnddtarget"
@@ -44,6 +43,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	k8stypes "k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/event"
+	"github.com/yndd/ndd-target-runtime/pkg/registrator"
 )
 
 const (
@@ -74,14 +74,16 @@ type TargetInstance interface {
 	WithTargetInstanceEventCh(eventChs map[string]chan event.GenericEvent)
 	// add the target registry to Target Instance
 	WithTargetInstanceTargetsRegistry(target.TargetRegistry)
+	// add the registrator to Target Instance
+	WithTargetInstanceRegistrator(r registrator.Registrator)
 
 	// Methods
 	// CreateGNMIClient create a gnmi client for the target
 	CreateGNMIClient() error
 	// GetCapabilities retrieves the capabilities of the target
-	GetCapabilities() (*gnmi.CapabilityResponse, error)
-	// Discover retrieves the target discovery information
-	Discover(enc []string) error
+	//GetCapabilities() (*gnmi.CapabilityResponse, error)
+	// GetRunningConfig retrieves the target running config
+	//GetRunningConfig() error
 	// GetInitialTargetConfig retrieves the initial target instance
 	GetInitialTargetConfig() error
 	// InitializeSystemConfig initializes the target system config
@@ -94,40 +96,50 @@ type TargetInstance interface {
 	StopTargetReconciler() error
 	// StopTargetCollector stops the target collector per target
 	StopTargetCollector() error
+	// Regsiter
+	Register()
+	// DeRegister
+	DeRegister()
 }
 
-// WithLogger adds a logger to the target instance
+// WithTargetInstanceLogger adds a logger to the target instance
 func WithTargetInstanceLogger(l logging.Logger) TargetInstanceOption {
 	return func(o TargetInstance) {
 		o.WithTargetInstanceLogger(l)
 	}
 }
 
-// WithClient adds a k8s client to the target instance
+// WithTargetInstanceClient adds a k8s client to the target instance
 func WithTargetInstanceClient(c resource.ClientApplicator) TargetInstanceOption {
 	return func(o TargetInstance) {
 		o.WithTargetInstanceClient(c)
 	}
 }
 
-// WithClient adds a cache to the target instance
+// WithTargetInstanceCache adds a cache to the target instance
 func WithTargetInstanceCache(c cache.Cache) TargetInstanceOption {
 	return func(s TargetInstance) {
 		s.WithTargetInstanceCache(c)
 	}
 }
 
-// WithClient adds event channels to the target instance
+// WithTargetInstanceEventCh adds event channels to the target instance
 func WithTargetInstanceEventCh(eventChs map[string]chan event.GenericEvent) TargetInstanceOption {
 	return func(s TargetInstance) {
 		s.WithTargetInstanceEventCh(eventChs)
 	}
 }
 
-// WithClient adds target registry to the target instance
+// WithTargetInstanceTargetsRegistry adds target registry to the target instance
 func WithTargetInstanceTargetsRegistry(tr target.TargetRegistry) TargetInstanceOption {
 	return func(s TargetInstance) {
 		s.WithTargetInstanceTargetsRegistry(tr)
+	}
+}
+
+func WithTargetInstanceRegistrator(r registrator.Registrator) TargetInstanceOption {
+	return func(s TargetInstance) {
+		s.WithTargetInstanceRegistrator(r)
 	}
 }
 
@@ -139,6 +151,8 @@ type targetInstance struct {
 	// tartgetRegistry
 	targetRegistry target.TargetRegistry
 
+	// controller info
+	controllerName string
 	// target info
 	newTarget       func() targetv1.Tg
 	nsTargetName    string
@@ -153,8 +167,10 @@ type targetInstance struct {
 	collector       targetcollector.Collector
 	reconciler      targetreconciler.Reconciler
 	// dynamic discovered data
-	discoveryInfo *targetv1.DiscoveryInfo
+	//discoveryInfo *targetv1.DiscoveryInfo
 	initialConfig interface{}
+	// registrator
+	registrator registrator.Registrator
 	// chan
 	stopCh chan struct{} // used to stop the child go routines if the target gets deleted
 	ctx    context.Context
@@ -163,16 +179,17 @@ type targetInstance struct {
 	log logging.Logger
 }
 
-func NewTargetInstance(ctx context.Context, namespace, nsTargetName, targetName string, opts ...TargetInstanceOption) (TargetInstance, error) {
+func NewTargetInstance(ctx context.Context, controllerName, namespace, nsTargetName, targetName string, opts ...TargetInstanceOption) (TargetInstance, error) {
 	tg := func() targetv1.Tg { return &targetv1.Target{} }
 
 	ti := &targetInstance{
-		nsTargetName: nsTargetName,
-		targetName:   targetName,
-		namespace:    namespace,
-		paths:        []*string{utils.StringPtr("/")},
-		stopCh:       make(chan struct{}),
-		newTarget:    tg,
+		controllerName: controllerName,
+		nsTargetName:   nsTargetName,
+		targetName:     targetName,
+		namespace:      namespace,
+		paths:          []*string{utils.StringPtr("/")},
+		stopCh:         make(chan struct{}),
+		newTarget:      tg,
 		targetModel: &model.Model{
 			StructRootType:  reflect.TypeOf((*ygotnddtarget.NddTarget_TargetEntry)(nil)),
 			SchemaTreeRoot:  ygotnddtarget.SchemaTree["NddTarget_TargetEntry"],
@@ -228,6 +245,10 @@ func (ti *targetInstance) WithTargetInstanceTargetsRegistry(tr target.TargetRegi
 	ti.targetRegistry = tr
 }
 
+func (ti *targetInstance) WithTargetInstanceRegistrator(r registrator.Registrator) {
+	ti.registrator = r
+}
+
 func (ti *targetInstance) CreateGNMIClient() error {
 	targetConfig, err := ti.getTargetConfig()
 	if err != nil {
@@ -240,21 +261,19 @@ func (ti *targetInstance) CreateGNMIClient() error {
 	return nil
 }
 
+/*
 func (ti *targetInstance) GetCapabilities() (*gnmi.CapabilityResponse, error) {
 	//log := ti.log.WithValues("nsTargetName", ti.nsTargetName)
 	return ti.target.GNMICap(ti.ctx)
 }
+*/
 
-func (ti *targetInstance) Discover(enc []string) error {
+/*
+func (ti *targetInstance) GetRunningConfig() error {
 	log := ti.log.WithValues("nsTargetName", ti.nsTargetName)
+	log.Debug("GetRunningConfig...")
 	// get device details through gnmi
 	var err error
-	ti.discoveryInfo, err = ti.target.Discover(ti.ctx)
-	if err != nil {
-		return err
-	}
-	ti.discoveryInfo.SupportedEncodings = enc
-	log.Debug("deviceDetails", "info", ti.discoveryInfo)
 
 	// query the target cache
 	targetCacheNsTargetName := cachename.NamespacedName(ti.nsTargetName).GetPrefixNamespacedName(cachename.TargetCachePrefix)
@@ -266,18 +285,11 @@ func (ti *targetInstance) Discover(enc []string) error {
 	if !ok {
 		return errors.New("unexpected Object")
 	}
-	targetCacheEntry.State = &ygotnddtarget.NddTarget_TargetEntry_State{
-		Hostname:           ti.discoveryInfo.HostName,
-		Kind:               ti.discoveryInfo.Kind,
-		MacAddress:         ti.discoveryInfo.MacAddress,
-		SerialNumber:       ti.discoveryInfo.SerialNumber,
-		SupportedEncodings: enc,
-		SwVersion:          ti.discoveryInfo.SwVersion,
-		VendorType:         ygotnddtarget.NddTarget_VendorType_nokia_srl,
-	}
+
 	ce.SetRunningConfig(targetCacheEntry)
 	return nil
 }
+*/
 
 func (ti *targetInstance) GetInitialTargetConfig() error {
 	log := ti.log.WithValues("nsTargetName", ti.nsTargetName)
@@ -492,4 +504,16 @@ func (ti *targetInstance) getSecret(ctx context.Context, tspec *ygotnddtarget.Nd
 		return nil, errors.Wrap(err, errCredentialSecretDoesNotExist)
 	}
 	return credsSecret, nil
+}
+
+func (ti *targetInstance) Register() {
+	ti.registrator.Register(ti.ctx, &registrator.ServiceConfig{
+		ID:         strings.Join([]string{ti.controllerName, "worker", "target"}, "-"),
+		Name:       ti.nsTargetName,
+		HealthKind: registrator.HealthKindNone,
+	})
+}
+
+func (ti *targetInstance) DeRegister() {
+	ti.registrator.DeRegister(ti.ctx, strings.Join([]string{ti.controllerName, "worker", "target"}, "-"))
 }
