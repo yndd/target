@@ -19,7 +19,7 @@ import (
 	"time"
 
 	"github.com/yndd/ndd-runtime/pkg/logging"
-	"github.com/yndd/ndd-target-runtime/pkg/registrator"
+	"github.com/yndd/registrator/registrator"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 )
 
