@@ -19,15 +19,20 @@ import (
 	"time"
 
 	"github.com/yndd/ndd-runtime/pkg/logging"
+	"github.com/yndd/ndd-target-runtime/pkg/registrator"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 )
 
 type NddControllerOptions struct {
-	Logger               logging.Logger
-	Poll                 time.Duration
-	Namespace            string
-	ControllerConfigName string
-	Revision             string
-	RevisionNamespace    string
-	GnmiAddress          string
-	CrdNames             []string
+	Logger                    logging.Logger
+	Poll                      time.Duration
+	Namespace                 string
+	ControllerConfigName      string
+	Revision                  string
+	RevisionNamespace         string
+	GnmiAddress               string
+	CrdNames                  []string
+	ServiceDiscoveryNamespace string
+	Copts                     controller.Options
+	Registrator               registrator.Registrator
 }
