@@ -148,7 +148,8 @@ type TargetStatus struct {
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="SYNC",type="string",JSONPath=".status.conditions[?(@.kind=='Synced')].status"
 // +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.kind=='Ready')].status"
-// +kubebuilder:printcolumn:name="ADDRESS",type="string",JSONPath=".spec.properties.config.address",description="address to connect to the target'"
+// +kubebuilder:printcolumn:name="HOSTNAME",type="string",JSONPath=".status.discoveryInfo.hostname",description="target hostname"
+// +kubebuilder:printcolumn:name="ADDRESS",type="string",JSONPath=".spec.properties.config.address",description="address to connect to the target"
 // +kubebuilder:printcolumn:name="PROTOCOL",type="string",JSONPath=".spec.properties.config.protocol",description="Protocol used to communicate to the target"
 // +kubebuilder:printcolumn:name="VENDORTYPE",type="string",JSONPath=".status.discoveryInfo.vendor-type",description="VendorType of target"
 // +kubebuilder:printcolumn:name="KIND",type="string",JSONPath=".status.discoveryInfo.kind",description="Kind of target"
