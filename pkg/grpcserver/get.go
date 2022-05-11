@@ -1,5 +1,5 @@
 /*
-Copyright 2021 NDD.
+Copyright 2021 NDDO.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package gnmiserver
+package grpcserver
 
 import (
 	"context"
@@ -34,7 +34,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (s *GnmiServerImpl) Get(ctx context.Context, req *gnmi.GetRequest) (*gnmi.GetResponse, error) {
+func (s *GrpcServerImpl) Get(ctx context.Context, req *gnmi.GetRequest) (*gnmi.GetResponse, error) {
 	ok := s.unaryRPCsem.TryAcquire(1)
 	if !ok {
 		return nil, status.Errorf(codes.ResourceExhausted, "max number of Unary RPC reached")
@@ -48,7 +48,7 @@ func (s *GnmiServerImpl) Get(ctx context.Context, req *gnmi.GetRequest) (*gnmi.G
 	}, err
 }
 
-func (s *GnmiServerImpl) HandleGet(req *gnmi.GetRequest) ([]*gnmi.Notification, error) {
+func (s *GrpcServerImpl) HandleGet(req *gnmi.GetRequest) ([]*gnmi.Notification, error) {
 	prefix := req.GetPrefix()
 	log := s.log.WithValues("origin", prefix.GetOrigin(), "target", prefix.GetTarget())
 	log.Debug("Get...", "path", req.GetPath())

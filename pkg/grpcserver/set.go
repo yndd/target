@@ -1,5 +1,5 @@
 /*
-Copyright 2021 NDD.
+Copyright 2021 NDDO.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package gnmiserver
+package grpcserver
 
 import (
 	"context"
@@ -33,7 +33,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (s *GnmiServerImpl) Set(ctx context.Context, req *gnmi.SetRequest) (*gnmi.SetResponse, error) {
+func (s *GrpcServerImpl) Set(ctx context.Context, req *gnmi.SetRequest) (*gnmi.SetResponse, error) {
 
 	ok := s.unaryRPCsem.TryAcquire(1)
 	if !ok {
