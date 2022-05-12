@@ -31,10 +31,10 @@ import (
 	"github.com/yndd/ndd-target-runtime/internal/targetchannel"
 	"github.com/yndd/ndd-target-runtime/pkg/cachename"
 	"github.com/yndd/ndd-target-runtime/pkg/grpcserver"
-	"github.com/yndd/ndd-target-runtime/pkg/registrator"
 	"github.com/yndd/ndd-target-runtime/pkg/resource"
 	"github.com/yndd/ndd-target-runtime/pkg/target"
 	"github.com/yndd/nddp-system/pkg/ygotnddp"
+	"github.com/yndd/registrator/registrator"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 )
 

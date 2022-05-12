@@ -39,11 +39,11 @@ import (
 	"github.com/yndd/ndd-target-runtime/pkg/target"
 	"github.com/yndd/ndd-target-runtime/pkg/ygotnddtarget"
 	"github.com/yndd/nddp-system/pkg/ygotnddp"
+	"github.com/yndd/registrator/registrator"
 	"google.golang.org/grpc"
 	corev1 "k8s.io/api/core/v1"
 	k8stypes "k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/event"
-	"github.com/yndd/ndd-target-runtime/pkg/registrator"
 )
 
 const (
@@ -507,7 +507,7 @@ func (ti *targetInstance) getSecret(ctx context.Context, tspec *ygotnddtarget.Nd
 }
 
 func (ti *targetInstance) Register() {
-	ti.registrator.Register(ti.ctx, &registrator.ServiceConfig{
+	ti.registrator.Register(ti.ctx, &registrator.Service{
 		ID:         strings.Join([]string{ti.controllerName, "worker", "target"}, "-"),
 		Name:       ti.nsTargetName,
 		HealthKind: registrator.HealthKindNone,
