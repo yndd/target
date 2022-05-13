@@ -28,7 +28,11 @@ spec:
     - jsonPath: .status.conditions[?(@.kind=='Ready')].status
       name: READY
       type: string
-    - description: address to connect to the target'
+    - description: target hostname
+      jsonPath: .status.discoveryInfo.hostname
+      name: HOSTNAME
+      type: string
+    - description: address to connect to the target
       jsonPath: .spec.properties.config.address
       name: ADDRESS
       type: string
