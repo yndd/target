@@ -21,7 +21,6 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/karimra/gnmic/target"
 	"github.com/pkg/errors"
 	nddv1 "github.com/yndd/ndd-runtime/apis/common/v1"
 	"github.com/yndd/ndd-runtime/pkg/event"
@@ -29,6 +28,7 @@ import (
 	"github.com/yndd/ndd-runtime/pkg/meta"
 	"github.com/yndd/ndd-runtime/pkg/model"
 	targetv1 "github.com/yndd/ndd-target-runtime/apis/dvr/v1"
+	"github.com/yndd/ndd-target-runtime/internal/targetchannel"
 	"github.com/yndd/ndd-target-runtime/pkg/resource"
 	"github.com/yndd/ndd-target-runtime/pkg/ygotnddtarget"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -76,6 +76,7 @@ type Reconciler struct {
 	address            string
 	expectedVendorType ygotnddtarget.E_NddTarget_VendorType
 	newTarget          func() targetv1.Tg
+	targetCh           chan targetchannel.TargetMsg
 
 	// target models
 	m  *model.Model
@@ -90,7 +91,7 @@ type Reconciler struct {
 	timeout      time.Duration
 
 	// connector for the gnmi client
-	gnmiConnector GnmiConnecter
+	//gnmiConnector GnmiConnecter
 
 	log    logging.Logger
 	record event.Recorder
@@ -148,6 +149,12 @@ func WithRecorder(er event.Recorder) ReconcilerOption {
 	}
 }
 
+func WithTargetChannel(tc chan targetchannel.TargetMsg) ReconcilerOption {
+	return func(r *Reconciler) {
+		r.targetCh = tc
+	}
+}
+
 // NewReconciler returns a Reconciler that reconciles target resources
 func NewReconciler(m manager.Manager, o ...ReconcilerOption) *Reconciler {
 	tg := func() targetv1.Tg {
@@ -190,12 +197,14 @@ func NewReconciler(m manager.Manager, o ...ReconcilerOption) *Reconciler {
 		ro(r)
 	}
 
-	r.gnmiConnector = &connector{
-		log: r.log,
-		m:   tm,
-		//fm:          tfm,
-		newClientFn: target.NewTarget,
-	}
+	/*
+		r.gnmiConnector = &connector{
+			log: r.log,
+			m:   tm,
+			//fm:          tfm,
+			newClientFn: target.NewTarget,
+		}
+	*/
 	return r
 }
 
@@ -215,7 +224,7 @@ func (r *Reconciler) Reconcile(_ context.Context, req reconcile.Request) (reconc
 		return reconcile.Result{}, errors.Wrap(resource.IgnoreNotFound(err), errGetTarget)
 	}
 
-	record := r.record.WithAnnotations("external-name", meta.GetExternalName(t))
+	//record := r.record.WithAnnotations("external-name", meta.GetExternalName(t))
 	log = log.WithValues(
 		"uid", t.GetUID(),
 		"version", t.GetResourceVersion(),
@@ -249,92 +258,32 @@ func (r *Reconciler) Reconcile(_ context.Context, req reconcile.Request) (reconc
 		}
 	}
 
-	external, err := r.gnmiConnector.Connect(ctx, r.address)
-	if err != nil {
-		if meta.WasDeleted(t) {
-			// when there is no target and we were requested to be deleted we can remove the
-			// finalizer since the target is no longer there and we assume cleanup will happen
-			// during target delete/create
-			if err := r.finalizer.RemoveFinalizer(ctx, t); err != nil {
-				// If this is the first time we encounter this issue we'll be
-				// requeued implicitly when we update our status with the new error
-				// condition. If not, we requeue explicitly, which will trigger
-				// backoff.
-				log.Debug("Cannot remove managed resource finalizer", "error", err)
-				t.SetConditions(nddv1.ReconcileError(err), nddv1.Unknown())
-				t.SetDiscoveryInfo(nil)
-				return reconcile.Result{Requeue: true}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
-			}
-
-			// We've successfully deleted our external resource (if necessary) and
-			// removed our finalizer. If we assume we were the only controller that
-			// added a finalizer to this resource then it should no longer exist and
-			// thus there is no point trying to update its status.
-			// log.Debug("Successfully deleted managed resource")
-			return reconcile.Result{Requeue: false}, nil
-		}
-
-		record.Event(t, event.Warning(reasonCannotConnect, err))
-		t.SetConditions(nddv1.ReconcileError(errors.Wrap(err, errReconcileConnect)), nddv1.Unavailable())
-		t.SetDiscoveryInfo(nil)
-		return reconcile.Result{Requeue: true}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
-	}
-
-	defer external.Close()
-
-	observation, err := external.Observe(ctx, req.Namespace, tspec)
-	if err != nil {
-		log.Debug("Cannot observe", "error", err)
-		record.Event(t, event.Warning(reasonCannotObserve, err))
-		t.SetConditions(nddv1.ReconcileError(errors.Wrap(err, errReconcileObserve)), nddv1.Unavailable())
-		t.SetDiscoveryInfo(nil)
-		return reconcile.Result{Requeue: true}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
-	}
-	log.Debug("observe", "observation", observation)
-
-	log.Debug("Health status", "status", t.GetCondition(nddv1.ConditionKindReady).Status)
 	if meta.WasDeleted(t) {
-		// CHECK IF A TARGETDRIVER WAS RUNNING -> IF SO DELETE IT
-		otherFInalizer, err := r.finalizer.HasOtherFinalizer(ctx, t)
-		if err != nil {
-			log.Debug("has other finalizer", "error", err)
-			t.SetConditions(nddv1.ReconcileError(errors.Wrap(err, errHasOtherFinalizer)), nddv1.Unavailable())
-			t.SetDiscoveryInfo(nil)
-			return reconcile.Result{Requeue: true}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
-		}
-		if otherFInalizer {
-			return reconcile.Result{RequeueAfter: veryShortWait}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
-		}
-		if observation.Exists {
-			if err := external.Delete(ctx, req.Namespace, tspec); err != nil {
-				log.Debug("Cannot delete external resource", "error", err)
-				record.Event(t, event.Warning(reasonCannotDelete, err))
-				t.SetConditions(nddv1.ReconcileError(errors.Wrap(err, errReconcileDelete)), nddv1.Unavailable())
-				t.SetDiscoveryInfo(nil)
-				return reconcile.Result{Requeue: true}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
-			}
-
-			// We've successfully requested deletion of our external resource.
-			// We queue another reconcile after a short wait rather than
-			// immediately finalizing our delete in order to verify that the
-			// external resource was actually deleted. If it no longer exists
-			// we'll skip this block on the next reconcile and proceed to
-			// unpublish and finalize. If it still exists we'll re-enter this
-			// block and try again.
-			// log.Debug("Successfully requested deletion of external resource")
-			record.Event(t, event.Normal(reasonDeleted, "Successfully requested deletion of external resource"))
-			t.SetConditions(nddv1.ReconcileSuccess(), nddv1.Deleting())
-			t.SetDiscoveryInfo(nil)
-			return reconcile.Result{RequeueAfter: veryShortWait}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
+		// stop/delete target
+		r.targetCh <- targetchannel.TargetMsg{
+			Target:    req.NamespacedName.String(),
+			Operation: targetchannel.Stop,
 		}
 
-		// Delete finalizer after the object is deleted
+		// when there is no target and we were requested to be deleted we can remove the
+		// finalizer since the target is no longer there and we assume cleanup will happen
+		// during target delete/create
 		if err := r.finalizer.RemoveFinalizer(ctx, t); err != nil {
-			log.Debug("Cannot remove target cr finalizer", "error", err)
-			t.SetConditions(nddv1.ReconcileError(err), nddv1.Unavailable())
-			t.SetDiscoveryInfo(nil)
+			// If this is the first time we encounter this issue we'll be
+			// requeued implicitly when we update our status with the new error
+			// condition. If not, we requeue explicitly, which will trigger
+			// backoff.
+			log.Debug("Cannot remove managed resource finalizer", "error", err)
+			t.SetConditions(nddv1.ReconcileError(err), nddv1.Unknown())
+			//t.SetDiscoveryInfo(nil)
 			return reconcile.Result{Requeue: true}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
 		}
+
+		// We've successfully deleted our external resource (if necessary) and
+		// removed our finalizer. If we assume we were the only controller that
+		// added a finalizer to this resource then it should no longer exist and
+		// thus there is no point trying to update its status.
+		// log.Debug("Successfully deleted managed resource")
 		return reconcile.Result{Requeue: false}, nil
 	}
 
@@ -346,105 +295,15 @@ func (r *Reconciler) Reconcile(_ context.Context, req reconcile.Request) (reconc
 		return reconcile.Result{Requeue: true}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
 	}
 
-	// Retrieve the Login details from the target cr spec and validate
-	// the target details and build the credentials for authentication
-	// to the target.
-	creds, err := r.getCredentials(ctx, t.GetNamespace(), tspec)
-	//log.Debug("Target creds", "creds", creds, "err", err)
-	if err != nil || creds == nil {
-		// CHECK IF A TARGET DRIVER WAS ALREDY RUNNING -> IF SO STOP/DELETE IT
-		if observation.Exists {
-			if err := external.Delete(ctx, req.Namespace, tspec); err != nil {
-				log.Debug("Cannot delete external resource", "error", err)
-				record.Event(t, event.Warning(reasonCannotDelete, err))
-				t.SetConditions(nddv1.ReconcileError(errors.Wrap(err, errReconcileDelete)), nddv1.Unavailable())
-				t.SetDiscoveryInfo(nil)
-				return reconcile.Result{Requeue: true}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
-			}
-
-			// We've successfully requested deletion of our external resource.
-			// We queue another reconcile after a short wait rather than
-			// immediately finalizing our delete in order to verify that the
-			// external resource was actually deleted. If it no longer exists
-			// we'll skip this block on the next reconcile and proceed to
-			// unpublish and finalize. If it still exists we'll re-enter this
-			// block and try again.
-			// log.Debug("Successfully requested deletion of external resource")
-			record.Event(t, event.Normal(reasonDeleted, "Successfully requested deletion of external resource"))
-			t.SetConditions(nddv1.ReconcileSuccess(), nddv1.Deleting())
-			t.SetDiscoveryInfo(nil)
-			return reconcile.Result{RequeueAfter: veryShortWait}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
-		}
-
-		log.Debug(errCredentials, "error", err)
-		r.record.Event(t, event.Warning(reasonSync, errors.Wrap(err, errCredentials)))
-		t.SetConditions(nddv1.ReconcileSuccess(), targetv1.InvalidCredentials())
-		t.SetDiscoveryInfo(nil)
-		return reconcile.Result{RequeueAfter: shortWait}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
+	// stop/delete target
+	r.targetCh <- targetchannel.TargetMsg{
+		Target:    req.NamespacedName.String(),
+		Operation: targetchannel.Start,
 	}
-
-	// CHECK IF A TARGET DRIVER WAS ALREDY RUNNING -> IF NOT CREATE/START IT
-	if !observation.Exists {
-		// START THE TARGET DRIVER
-		if err := external.Create(ctx, req.Namespace, tspec); err != nil {
-			// We'll hit this condition if the grpc connection fails.
-			// If this is the first time we encounter this
-			// issue we'll be requeued implicitly when we update our status with
-			// the new error condition. If not, we requeue explicitly, which will trigger backoff.
-			log.Debug("Cannot create external resource", "error", err)
-			record.Event(t, event.Warning(reasonCannotCreate, err))
-			t.SetConditions(nddv1.ReconcileError(errors.Wrap(err, errReconcileCreate)), nddv1.Unavailable())
-			t.SetDiscoveryInfo(nil)
-			return reconcile.Result{RequeueAfter: veryShortWait}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
-		}
-		t.SetConditions(nddv1.Creating())
-
-		// We've successfully created our external resource. In many cases the
-		// creation process takes a little time to finish. We requeue explicitly
-		// order to observe the external resource to determine whether it's
-		// ready for use.
-		//log.Debug("Successfully requested creation of external resource")
-		record.Event(t, event.Normal(reasonCreated, "Successfully requested creation of external resource"))
-		t.SetConditions(nddv1.ReconcileSuccess())
-		t.SetDiscoveryInfo(nil)
-		return reconcile.Result{RequeueAfter: veryShortWait}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
-
-	}
-	// check if the config changed
-	if !observation.IsUpToDate {
-		// STOP THE TARGET DRIVER, THE NEXT REONCILE IT WILL BE CREATED WITH THE PROPER CONFIG
-		if err := external.Delete(ctx, req.Namespace, tspec); err != nil {
-			log.Debug("Cannot delete external resource", "error", err)
-			record.Event(t, event.Warning(reasonCannotDelete, err))
-			t.SetConditions(nddv1.ReconcileError(errors.Wrap(err, errReconcileDelete)), nddv1.Unavailable())
-			t.SetDiscoveryInfo(nil)
-			return reconcile.Result{Requeue: true}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
-		}
-
-		// We've successfully requested deletion of our external resource.
-		// We queue another reconcile after a short wait rather than
-		// immediately finalizing our delete in order to verify that the
-		// external resource was actually deleted. If it no longer exists
-		// we'll skip this block on the next reconcile and proceed to
-		// unpublish and finalize. If it still exists we'll re-enter this
-		// block and try again.
-		// log.Debug("Successfully requested deletion of external resource")
-		record.Event(t, event.Normal(reasonDeleted, "Successfully requested deletion of external resource"))
-		t.SetConditions(nddv1.ReconcileSuccess(), nddv1.Deleting())
-		t.SetDiscoveryInfo(nil)
-		return reconcile.Result{RequeueAfter: veryShortWait}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
-	}
-
-	if !observation.Discovered {
-		// if the observation is not discovered it means the discovery is not completed and we need to reconcile
-		t.SetDiscoveryInfo(nil)
-		return reconcile.Result{RequeueAfter: shortWait}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
-	}
-	t.SetDiscoveryInfo(observation.DiscoveryInfo)
 
 	// The resource is up to date, we reconcile after the pollInterval to
 	// regularly validate if the Target CR is still up to date
-	log.Debug("Target is discovered and available", "requeue-after", time.Now().Add(r.pollInterval))
-	t.SetConditions(nddv1.ReconcileSuccess(), nddv1.Available())
+	log.Debug("Target is created", "requeue-after", time.Now().Add(r.pollInterval))
+	//t.SetConditions(nddv1.ReconcileSuccess(), nddv1.Available())
 	return reconcile.Result{RequeueAfter: r.pollInterval}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
 }

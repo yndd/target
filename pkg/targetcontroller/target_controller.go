@@ -19,7 +19,9 @@ package targetcontroller
 import (
 	"context"
 	"fmt"
+	"os"
 	"reflect"
+	"strings"
 	"sync"
 
 	"github.com/openconfig/gnmi/proto/gnmi"
@@ -35,6 +37,10 @@ import (
 	"github.com/yndd/ndd-target-runtime/pkg/target"
 	"github.com/yndd/nddp-system/pkg/ygotnddp"
 	"github.com/yndd/registrator/registrator"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/rest"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 )
 
@@ -45,24 +51,8 @@ const (
 	errTargetiscoveryFailed = "cannot discover target"
 )
 
-// Option can be used to manipulate TargetController config.
-type Option func(TargetController)
-
 // TargetController defines the interfaces for the target controller
 type TargetController interface {
-	//options
-	// add a logger to TargetController
-	WithLogger(log logging.Logger)
-	// add a k8s client to TargetController
-	WithClient(c resource.ClientApplicator)
-	// add an event channel to TargetController
-	WithEventCh(eventChs map[string]chan event.GenericEvent)
-	// add the target registry to TargetController
-	WithTargetsRegistry(target.TargetRegistry)
-	// add the target model to the TargetController
-	WithTargetModel(*model.Model)
-	// add a registratorto the TargetController
-	WithRegistrator(registrator.Registrator)
 	//targetinstance methods
 	// add a target instance to the target controller
 	AddTargetInstance(targetName string, t TargetInstance)
@@ -75,58 +65,29 @@ type TargetController interface {
 	Start() error
 	// stop the target controller
 	Stop() error
+	// GetTargetChannel
+	GetTargetChannel() chan targetchannel.TargetMsg
 }
 
-// WithLogger adds a logger to the target controller
-func WithLogger(l logging.Logger) Option {
-	return func(o TargetController) {
-		o.WithLogger(l)
-	}
-}
-
-// WithClient adds a k8s client to the target controller.
-func WithClient(c resource.ClientApplicator) Option {
-	return func(o TargetController) {
-		o.WithClient(c)
-	}
-}
-
-// WithEventCh adds the event channel to the Target Controller
-func WithEventCh(eventChs map[string]chan event.GenericEvent) Option {
-	return func(o TargetController) {
-		o.WithEventCh(eventChs)
-	}
-}
-
-// WithClient adds a target registry to the Target Controller
-func WithTargetsRegistry(t target.TargetRegistry) Option {
-	return func(o TargetController) {
-		o.WithTargetsRegistry(t)
-	}
-}
-
-// WithTargetModel adds the target model to the target Controller
-func WithTargetModel(m *model.Model) Option {
-	return func(o TargetController) {
-		o.WithTargetModel(m)
-	}
-}
-
-// WithTargetModel adds the target model to the target Controller
-func WithRegistrator(reg registrator.Registrator) Option {
-	return func(o TargetController) {
-		o.WithRegistrator(reg)
-	}
+type Options struct {
+	Logger                    logging.Logger
+	Scheme                    *runtime.Scheme
+	GrpcBindAddress           string
+	ServiceDiscovery          pkgmetav1.ServiceDiscoveryType
+	ServiceDiscoveryNamespace string
+	ControllerConfigName      string
+	TargetRegistry            target.TargetRegistry
+	TargetModel               *model.Model
 }
 
 // targetControllerImpl implements the TargetController interface
 type targetControllerImpl struct {
-	controllerName string
-	m              sync.RWMutex
-	targets        map[string]TargetInstance
-	cache          cache.Cache
-	targetRegistry target.TargetRegistry
-	targetModel    *model.Model
+	options *Options
+	m       sync.RWMutex
+	targets map[string]TargetInstance
+	cache   cache.Cache
+	//targetRegistry target.TargetRegistry
+	//targetModel *model.Model
 
 	// channels
 	targetCh chan targetchannel.TargetMsg
@@ -145,49 +106,51 @@ type targetControllerImpl struct {
 	log logging.Logger
 }
 
-func New(ctx context.Context, controllerName string, opts ...Option) TargetController {
-	c := &targetControllerImpl{
-		controllerName: controllerName,
-		m:              sync.RWMutex{},
-		targets:        make(map[string]TargetInstance),
-		targetCh:       make(chan targetchannel.TargetMsg),
-		stopCh:         make(chan bool),
-	}
+func New(ctx context.Context, cfg func() *rest.Config, o *Options) (TargetController, error) {
+	log := o.Logger
+	log.Debug("new target controller")
 
-	for _, opt := range opts {
-		opt(c)
+	c := &targetControllerImpl{
+		options:  o,
+		m:        sync.RWMutex{},
+		targets:  make(map[string]TargetInstance),
+		targetCh: make(chan targetchannel.TargetMsg),
+		stopCh:   make(chan bool),
+	}
+	// get client
+	client, err := getClient(o.Scheme)
+	if err != nil {
+		return nil, err
 	}
 
 	c.ctx, c.cfn = context.WithCancel(ctx)
+	switch o.ServiceDiscovery {
+	case pkgmetav1.ServiceDiscoveryTypeConsul:
+		log.Debug("serviceDiscoveryNamespace", "serviceDiscoveryNamespace", o.ServiceDiscoveryNamespace)
+		var err error
+		c.registrator, err = registrator.NewConsulRegistrator(ctx, o.ServiceDiscoveryNamespace, "kind-dc1",
+			registrator.WithClient(resource.ClientApplicator{
+				Client:     client,
+				Applicator: resource.NewAPIPatchingApplicator(client),
+			}),
+			registrator.WithLogger(o.Logger))
+
+		if err != nil {
+			return nil, errors.Wrap(err, "Cannot initialize registrator")
+		}
+	case pkgmetav1.ServiceDiscoveryTypeK8s:
+	default:
+		c.registrator = registrator.NewNopRegistrator()
+	}
 
 	// initialize the multi-device cache
 	c.cache = cache.New()
 
-	return c
+	return c, nil
 }
 
-func (c *targetControllerImpl) WithLogger(l logging.Logger) {
-	c.log = l
-}
-
-func (c *targetControllerImpl) WithClient(rc resource.ClientApplicator) {
-	c.client = rc
-}
-
-func (c *targetControllerImpl) WithEventCh(eventChs map[string]chan event.GenericEvent) {
-	c.eventChs = eventChs
-}
-
-func (c *targetControllerImpl) WithTargetsRegistry(t target.TargetRegistry) {
-	c.targetRegistry = t
-}
-
-func (c *targetControllerImpl) WithTargetModel(m *model.Model) {
-	c.targetModel = m
-}
-
-func (c *targetControllerImpl) WithRegistrator(r registrator.Registrator) {
-	c.registrator = r
+func (c *targetControllerImpl) GetTargetChannel() chan targetchannel.TargetMsg {
+	return c.targetCh
 }
 
 func (c *targetControllerImpl) GetTargetInstance(targetName string) TargetInstance {
@@ -245,6 +208,16 @@ func (c *targetControllerImpl) Start() error {
 	if err := c.server.Start(); err != nil {
 		return err
 	}
+
+	// register the service
+	c.registrator.Register(c.ctx, &registrator.Service{
+		Name:       pkgmetav1.GetServiceName(c.options.ControllerConfigName, "worker"),
+		ID:         os.Getenv("POD_NAME"),
+		Port:       pkgmetav1.GnmiServerPort,
+		Address:    strings.Join([]string{os.Getenv("POD_NAME"), os.Getenv("GRPC_SVC_NAME"), os.Getenv("POD_NAMESPACE"), "svc", "cluster", "local"}, "."),
+		Tags:       []string{},
+		HealthKind: registrator.HealthKindGRPC,
+	})
 
 	// start target handler, which enables crud operations for targets
 	// create, delete requests
@@ -308,12 +281,12 @@ func (c *targetControllerImpl) startTarget(nsTargetName string) error {
 		return fmt.Errorf("target cache not initialized: %s", targetCacheNsTargetName)
 	}
 
-	ti, err := NewTargetInstance(c.ctx, c.controllerName, namespace, nsTargetName, targetName,
+	ti, err := NewTargetInstance(c.ctx, c.options.ControllerConfigName, namespace, nsTargetName, targetName,
 		WithTargetInstanceCache(c.cache),
 		WithTargetInstanceClient(c.client),
 		WithTargetInstanceLogger(c.log),
 		WithTargetInstanceEventCh(c.eventChs),
-		WithTargetInstanceTargetsRegistry(c.targetRegistry),
+		WithTargetInstanceTargetsRegistry(c.options.TargetRegistry),
 		WithTargetInstanceRegistrator(c.registrator),
 	)
 	if err != nil {
@@ -337,7 +310,7 @@ func (c *targetControllerImpl) startTarget(nsTargetName string) error {
 	// initialize the config target cache
 	configCacheNsTargetName := cachename.NamespacedName(nsTargetName).GetPrefixNamespacedName(cachename.ConfigCachePrefix)
 	cce := cache.NewCacheEntry(configCacheNsTargetName)
-	cce.SetModel(c.targetModel)
+	cce.SetModel(c.options.TargetModel)
 	c.cache.AddEntry(cce)
 
 	// initialize the system target cache
@@ -385,4 +358,13 @@ func (c *targetControllerImpl) stopTarget(nsTargetName string) error {
 	targetCacheNsTargetName := cachename.NamespacedName(nsTargetName).GetPrefixNamespacedName(cachename.TargetCachePrefix)
 	c.cache.DeleteEntry(targetCacheNsTargetName)
 	return nil
+}
+
+func getClient(scheme *runtime.Scheme) (client.Client, error) {
+	cfg, err := ctrl.GetConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	return client.New(cfg, client.Options{Scheme: scheme})
 }
