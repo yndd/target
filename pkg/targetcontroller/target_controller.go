@@ -39,7 +39,6 @@ import (
 	"github.com/yndd/registrator/registrator"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 )
@@ -106,7 +105,7 @@ type targetControllerImpl struct {
 	log logging.Logger
 }
 
-func New(ctx context.Context, cfg func() *rest.Config, o *Options) (TargetController, error) {
+func New(ctx context.Context, config *rest.Config, o *Options) (TargetController, error) {
 	log := o.Logger
 	log.Debug("new target controller")
 
@@ -118,7 +117,7 @@ func New(ctx context.Context, cfg func() *rest.Config, o *Options) (TargetContro
 		stopCh:   make(chan bool),
 	}
 	// get client
-	client, err := getClient(o.Scheme)
+	client, err := client.New(config, client.Options{Scheme: o.Scheme})
 	if err != nil {
 		return nil, err
 	}
@@ -358,13 +357,4 @@ func (c *targetControllerImpl) stopTarget(nsTargetName string) error {
 	targetCacheNsTargetName := cachename.NamespacedName(nsTargetName).GetPrefixNamespacedName(cachename.TargetCachePrefix)
 	c.cache.DeleteEntry(targetCacheNsTargetName)
 	return nil
-}
-
-func getClient(scheme *runtime.Scheme) (client.Client, error) {
-	cfg, err := ctrl.GetConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	return client.New(cfg, client.Options{Scheme: scheme})
 }
