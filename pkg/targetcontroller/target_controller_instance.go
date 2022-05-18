@@ -19,6 +19,7 @@ package targetcontroller
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"strings"
 	"time"
@@ -27,6 +28,7 @@ import (
 	"github.com/karimra/gnmic/types"
 	"github.com/openconfig/ygot/ygot"
 	"github.com/pkg/errors"
+	pkgmetav1 "github.com/yndd/ndd-core/apis/pkg/meta/v1"
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/ndd-runtime/pkg/model"
 	"github.com/yndd/ndd-runtime/pkg/utils"
@@ -508,12 +510,14 @@ func (ti *targetInstance) getSecret(ctx context.Context, tspec *ygotnddtarget.Nd
 
 func (ti *targetInstance) Register() {
 	ti.registrator.Register(ti.ctx, &registrator.Service{
-		ID:         strings.Join([]string{ti.controllerName, "worker", "target"}, "-"),
-		Name:       ti.nsTargetName,
+		Name: pkgmetav1.GetServiceName(ti.controllerName, strings.Join([]string{"worker", "target"}, "-")),
+		//ID:         strings.Join([]string{ti.controllerName, "worker", "target"}, "-"),
+		ID:         ti.nsTargetName,
+		Tags:       []string{fmt.Sprintf("target=%s", ti.nsTargetName)},
 		HealthKind: registrator.HealthKindNone,
 	})
 }
 
 func (ti *targetInstance) DeRegister() {
-	ti.registrator.DeRegister(ti.ctx, strings.Join([]string{ti.controllerName, "worker", "target"}, "-"))
+	ti.registrator.DeRegister(ti.ctx, strings.Join([]string{ti.controllerName, ti.nsTargetName}, "-"))
 }

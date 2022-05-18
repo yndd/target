@@ -37,9 +37,7 @@ import (
 	"github.com/yndd/ndd-target-runtime/pkg/target"
 	"github.com/yndd/nddp-system/pkg/ygotnddp"
 	"github.com/yndd/registrator/registrator"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 )
 
@@ -69,14 +67,15 @@ type TargetController interface {
 }
 
 type Options struct {
-	Logger                    logging.Logger
-	Scheme                    *runtime.Scheme
-	GrpcBindAddress           string
-	ServiceDiscovery          pkgmetav1.ServiceDiscoveryType
-	ServiceDiscoveryNamespace string
-	ControllerConfigName      string
-	TargetRegistry            target.TargetRegistry
-	TargetModel               *model.Model
+	Logger logging.Logger
+	//Scheme          *runtime.Scheme
+	GrpcBindAddress string
+	Registrator     registrator.Registrator
+	//ServiceDiscovery          pkgmetav1.ServiceDiscoveryType
+	//ServiceDiscoveryNamespace string
+	ControllerConfigName string
+	TargetRegistry target.TargetRegistry
+	TargetModel    *model.Model
 }
 
 // targetControllerImpl implements the TargetController interface
@@ -110,36 +109,12 @@ func New(ctx context.Context, config *rest.Config, o *Options) (TargetController
 	log.Debug("new target controller")
 
 	c := &targetControllerImpl{
-		options:  o,
-		m:        sync.RWMutex{},
-		targets:  make(map[string]TargetInstance),
-		targetCh: make(chan targetchannel.TargetMsg),
-		stopCh:   make(chan bool),
-	}
-	// get client
-	client, err := client.New(config, client.Options{Scheme: o.Scheme})
-	if err != nil {
-		return nil, err
-	}
-
-	c.ctx, c.cfn = context.WithCancel(ctx)
-	switch o.ServiceDiscovery {
-	case pkgmetav1.ServiceDiscoveryTypeConsul:
-		log.Debug("serviceDiscoveryNamespace", "serviceDiscoveryNamespace", o.ServiceDiscoveryNamespace)
-		var err error
-		c.registrator, err = registrator.NewConsulRegistrator(ctx, o.ServiceDiscoveryNamespace, "kind-dc1",
-			registrator.WithClient(resource.ClientApplicator{
-				Client:     client,
-				Applicator: resource.NewAPIPatchingApplicator(client),
-			}),
-			registrator.WithLogger(o.Logger))
-
-		if err != nil {
-			return nil, errors.Wrap(err, "Cannot initialize registrator")
-		}
-	case pkgmetav1.ServiceDiscoveryTypeK8s:
-	default:
-		c.registrator = registrator.NewNopRegistrator()
+		options:     o,
+		m:           sync.RWMutex{},
+		targets:     make(map[string]TargetInstance),
+		targetCh:    make(chan targetchannel.TargetMsg),
+		stopCh:      make(chan bool),
+		registrator: o.Registrator,
 	}
 
 	// initialize the multi-device cache
@@ -214,7 +189,7 @@ func (c *targetControllerImpl) Start() error {
 		ID:         os.Getenv("POD_NAME"),
 		Port:       pkgmetav1.GnmiServerPort,
 		Address:    strings.Join([]string{os.Getenv("POD_NAME"), os.Getenv("GRPC_SVC_NAME"), os.Getenv("POD_NAMESPACE"), "svc", "cluster", "local"}, "."),
-		Tags:       []string{},
+		Tags:       []string{fmt.Sprintf("pod=%s/%s", os.Getenv("POD_NAMESPACE"), os.Getenv("POD_NAME"))},
 		HealthKind: registrator.HealthKindGRPC,
 	})
 
