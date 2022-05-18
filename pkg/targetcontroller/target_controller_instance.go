@@ -19,7 +19,7 @@ package targetcontroller
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"os"
 	"reflect"
 	"strings"
 	"time"
@@ -154,7 +154,7 @@ type targetInstance struct {
 	targetRegistry target.TargetRegistry
 
 	// controller info
-	controllerName string
+	//controllerName string
 	// target info
 	newTarget       func() targetv1.Tg
 	nsTargetName    string
@@ -181,11 +181,10 @@ type targetInstance struct {
 	log logging.Logger
 }
 
-func NewTargetInstance(ctx context.Context, controllerName, namespace, nsTargetName, targetName string, opts ...TargetInstanceOption) (TargetInstance, error) {
+func NewTargetInstance(ctx context.Context, namespace, nsTargetName, targetName string, opts ...TargetInstanceOption) (TargetInstance, error) {
 	tg := func() targetv1.Tg { return &targetv1.Target{} }
 
 	ti := &targetInstance{
-		controllerName: controllerName,
 		nsTargetName:   nsTargetName,
 		targetName:     targetName,
 		namespace:      namespace,
@@ -510,14 +509,16 @@ func (ti *targetInstance) getSecret(ctx context.Context, tspec *ygotnddtarget.Nd
 
 func (ti *targetInstance) Register() {
 	ti.registrator.Register(ti.ctx, &registrator.Service{
-		Name: pkgmetav1.GetServiceName(ti.controllerName, strings.Join([]string{"worker", "target"}, "-")),
+		//Name: pkgmetav1.GetServiceName(ti.controllerName, strings.Join([]string{"worker", "target"}, "-")),
+		Name: os.Getenv("TARGET_SERVICE_NAME"),
 		//ID:         strings.Join([]string{ti.controllerName, "worker", "target"}, "-"),
-		ID:         ti.nsTargetName,
-		Tags:       []string{fmt.Sprintf("target=%s", ti.nsTargetName)},
+		ID: ti.nsTargetName,
+		//Tags:       []string{fmt.Sprintf("target=%s", ti.nsTargetName)},
+		Tags:       pkgmetav1.GetTargetTag(ti.namespace, ti.targetName),
 		HealthKind: registrator.HealthKindNone,
 	})
 }
 
 func (ti *targetInstance) DeRegister() {
-	ti.registrator.DeRegister(ti.ctx, strings.Join([]string{ti.controllerName, ti.nsTargetName}, "-"))
+	ti.registrator.DeRegister(ti.ctx, os.Getenv("TARGET_SERVICE_NAME"))
 }

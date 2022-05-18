@@ -73,7 +73,7 @@ type Options struct {
 	Registrator     registrator.Registrator
 	//ServiceDiscovery          pkgmetav1.ServiceDiscoveryType
 	//ServiceDiscoveryNamespace string
-	ControllerConfigName string
+	//ControllerConfigName string
 	TargetRegistry target.TargetRegistry
 	TargetModel    *model.Model
 }
@@ -185,11 +185,11 @@ func (c *targetControllerImpl) Start() error {
 
 	// register the service
 	c.registrator.Register(c.ctx, &registrator.Service{
-		Name:       pkgmetav1.GetServiceName(c.options.ControllerConfigName, "worker"),
+		Name:       os.Getenv("SERVICE_NAME"),
 		ID:         os.Getenv("POD_NAME"),
 		Port:       pkgmetav1.GnmiServerPort,
 		Address:    strings.Join([]string{os.Getenv("POD_NAME"), os.Getenv("GRPC_SVC_NAME"), os.Getenv("POD_NAMESPACE"), "svc", "cluster", "local"}, "."),
-		Tags:       []string{fmt.Sprintf("pod=%s/%s", os.Getenv("POD_NAMESPACE"), os.Getenv("POD_NAME"))},
+		Tags:       pkgmetav1.GetServiceTag(os.Getenv("POD_NAMESPACE"), os.Getenv("POD_NAME")),
 		HealthKind: registrator.HealthKindGRPC,
 	})
 
@@ -255,7 +255,7 @@ func (c *targetControllerImpl) startTarget(nsTargetName string) error {
 		return fmt.Errorf("target cache not initialized: %s", targetCacheNsTargetName)
 	}
 
-	ti, err := NewTargetInstance(c.ctx, c.options.ControllerConfigName, namespace, nsTargetName, targetName,
+	ti, err := NewTargetInstance(c.ctx, namespace, nsTargetName, targetName,
 		WithTargetInstanceCache(c.cache),
 		WithTargetInstanceClient(c.client),
 		WithTargetInstanceLogger(c.log),
