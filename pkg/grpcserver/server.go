@@ -20,7 +20,6 @@ import (
 	"context"
 	"crypto/tls"
 	"net"
-	"strconv"
 	"strings"
 	"sync"
 
@@ -148,13 +147,13 @@ type GrpcServerImpl struct {
 	ctx context.Context
 }
 
-func New(port int, opts ...Option) GrpcServer {
+func New(address string, opts ...Option) GrpcServer {
 	s := &GrpcServerImpl{
 		//m: match.New(),
 		statusMap: map[string]healthpb.HealthCheckResponse_ServingStatus{"": healthpb.HealthCheckResponse_SERVING},
 		updates:   make(map[string]map[healthgrpc.Health_WatchServer]chan healthpb.HealthCheckResponse_ServingStatus),
 		cfg: &config{
-			address: ":" + strconv.Itoa(port),
+			address: address,
 			//skipVerify: true,
 			//inSecure:   true,
 		},

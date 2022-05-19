@@ -185,12 +185,12 @@ func NewTargetInstance(ctx context.Context, namespace, nsTargetName, targetName 
 	tg := func() targetv1.Tg { return &targetv1.Target{} }
 
 	ti := &targetInstance{
-		nsTargetName:   nsTargetName,
-		targetName:     targetName,
-		namespace:      namespace,
-		paths:          []*string{utils.StringPtr("/")},
-		stopCh:         make(chan struct{}),
-		newTarget:      tg,
+		nsTargetName: nsTargetName,
+		targetName:   targetName,
+		namespace:    namespace,
+		paths:        []*string{utils.StringPtr("/")},
+		stopCh:       make(chan struct{}),
+		newTarget:    tg,
 		targetModel: &model.Model{
 			StructRootType:  reflect.TypeOf((*ygotnddtarget.NddTarget_TargetEntry)(nil)),
 			SchemaTreeRoot:  ygotnddtarget.SchemaTree["NddTarget_TargetEntry"],
@@ -509,11 +509,8 @@ func (ti *targetInstance) getSecret(ctx context.Context, tspec *ygotnddtarget.Nd
 
 func (ti *targetInstance) Register() {
 	ti.registrator.Register(ti.ctx, &registrator.Service{
-		//Name: pkgmetav1.GetServiceName(ti.controllerName, strings.Join([]string{"worker", "target"}, "-")),
-		Name: os.Getenv("TARGET_SERVICE_NAME"),
-		//ID:         strings.Join([]string{ti.controllerName, "worker", "target"}, "-"),
-		ID: ti.nsTargetName,
-		//Tags:       []string{fmt.Sprintf("target=%s", ti.nsTargetName)},
+		Name:       os.Getenv("TARGET_SERVICE_NAME"),
+		ID:         ti.nsTargetName,
 		Tags:       pkgmetav1.GetTargetTag(ti.namespace, ti.targetName),
 		HealthKind: registrator.HealthKindNone,
 	})

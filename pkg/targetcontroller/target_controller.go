@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"os"
 	"reflect"
-	"strings"
 	"sync"
 
 	"github.com/openconfig/gnmi/proto/gnmi"
@@ -69,8 +68,8 @@ type TargetController interface {
 type Options struct {
 	Logger logging.Logger
 	//Scheme          *runtime.Scheme
-	GrpcBindAddress string
-	Registrator     registrator.Registrator
+	GrpcServerAddress string
+	Registrator       registrator.Registrator
 	//ServiceDiscovery          pkgmetav1.ServiceDiscoveryType
 	//ServiceDiscoveryNamespace string
 	//ControllerConfigName string
@@ -86,6 +85,7 @@ type targetControllerImpl struct {
 	cache   cache.Cache
 	//targetRegistry target.TargetRegistry
 	//targetModel *model.Model
+	grpcServerAddress string
 
 	// channels
 	targetCh chan targetchannel.TargetMsg
@@ -109,12 +109,13 @@ func New(ctx context.Context, config *rest.Config, o *Options) (TargetController
 	log.Debug("new target controller")
 
 	c := &targetControllerImpl{
-		options:     o,
-		m:           sync.RWMutex{},
-		targets:     make(map[string]TargetInstance),
-		targetCh:    make(chan targetchannel.TargetMsg),
-		stopCh:      make(chan bool),
-		registrator: o.Registrator,
+		options:           o,
+		m:                 sync.RWMutex{},
+		targets:           make(map[string]TargetInstance),
+		targetCh:          make(chan targetchannel.TargetMsg),
+		stopCh:            make(chan bool),
+		registrator:       o.Registrator,
+		grpcServerAddress: o.GrpcServerAddress,
 	}
 
 	// initialize the multi-device cache
@@ -172,7 +173,7 @@ func (c *targetControllerImpl) Start() error {
 	c.log.Debug("starting targetdriver...")
 
 	// start grpc server
-	c.server = grpcserver.New(pkgmetav1.GnmiServerPort,
+	c.server = grpcserver.New(c.grpcServerAddress,
 		grpcserver.WithHealth(true),
 		grpcserver.WithGnmi(true),
 		grpcserver.WithCache(c.cache),
@@ -185,10 +186,11 @@ func (c *targetControllerImpl) Start() error {
 
 	// register the service
 	c.registrator.Register(c.ctx, &registrator.Service{
-		Name:       os.Getenv("SERVICE_NAME"),
-		ID:         os.Getenv("POD_NAME"),
-		Port:       pkgmetav1.GnmiServerPort,
-		Address:    strings.Join([]string{os.Getenv("POD_NAME"), os.Getenv("GRPC_SVC_NAME"), os.Getenv("POD_NAMESPACE"), "svc", "cluster", "local"}, "."),
+		Name:    os.Getenv("SERVICE_NAME"),
+		ID:      os.Getenv("POD_NAME"),
+		Port:    pkgmetav1.GnmiServerPort,
+		Address: os.Getenv("POD_IP"),
+		//Address:    strings.Join([]string{os.Getenv("POD_NAME"), os.Getenv("GRPC_SVC_NAME"), os.Getenv("POD_NAMESPACE"), "svc", "cluster", "local"}, "."),
 		Tags:       pkgmetav1.GetServiceTag(os.Getenv("POD_NAMESPACE"), os.Getenv("POD_NAME")),
 		HealthKind: registrator.HealthKindGRPC,
 	})
