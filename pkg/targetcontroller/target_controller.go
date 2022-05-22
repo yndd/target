@@ -110,6 +110,7 @@ func New(ctx context.Context, config *rest.Config, o *Options) (TargetController
 	log.Debug("new target controller")
 
 	c := &targetControllerImpl{
+		log:               o.Logger,
 		options:           o,
 		m:                 sync.RWMutex{},
 		targets:           make(map[string]TargetInstance),
