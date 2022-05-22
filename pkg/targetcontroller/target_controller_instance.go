@@ -28,7 +28,7 @@ import (
 	"github.com/karimra/gnmic/types"
 	"github.com/openconfig/ygot/ygot"
 	"github.com/pkg/errors"
-	pkgmetav1 "github.com/yndd/ndd-core/apis/pkg/meta/v1"
+	pkgv1 "github.com/yndd/ndd-core/apis/pkg/v1"
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/ndd-runtime/pkg/model"
 	"github.com/yndd/ndd-runtime/pkg/utils"
@@ -509,10 +509,10 @@ func (ti *targetInstance) getSecret(ctx context.Context, tspec *ygotnddtarget.Nd
 
 func (ti *targetInstance) Register() {
 	ti.registrator.Register(ti.ctx, &registrator.Service{
-		Name:       os.Getenv("TARGET_SERVICE_NAME"),
-		ID:         ti.nsTargetName,
-		Tags:       pkgmetav1.GetTargetTag(ti.namespace, ti.targetName),
-		HealthKind: registrator.HealthKindNone,
+		Name:         os.Getenv("TARGET_SERVICE_NAME"),
+		ID:           ti.nsTargetName,
+		Tags:         pkgv1.GetTargetTag(ti.namespace, ti.targetName),
+		HealthChecks: []registrator.HealthKind{registrator.HealthKindTTL},
 	})
 }
 

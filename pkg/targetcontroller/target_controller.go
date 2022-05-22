@@ -26,6 +26,7 @@ import (
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/pkg/errors"
 	pkgmetav1 "github.com/yndd/ndd-core/apis/pkg/meta/v1"
+	pkgv1 "github.com/yndd/ndd-core/apis/pkg/v1"
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/ndd-runtime/pkg/model"
 	"github.com/yndd/ndd-target-runtime/internal/cache"
@@ -191,8 +192,8 @@ func (c *targetControllerImpl) Start() error {
 		Port:    pkgmetav1.GnmiServerPort,
 		Address: os.Getenv("POD_IP"),
 		//Address:    strings.Join([]string{os.Getenv("POD_NAME"), os.Getenv("GRPC_SVC_NAME"), os.Getenv("POD_NAMESPACE"), "svc", "cluster", "local"}, "."),
-		Tags:       pkgmetav1.GetServiceTag(os.Getenv("POD_NAMESPACE"), os.Getenv("POD_NAME")),
-		HealthKind: registrator.HealthKindGRPC,
+		Tags:         pkgv1.GetServiceTag(os.Getenv("POD_NAMESPACE"), os.Getenv("POD_NAME")),
+		HealthChecks: []registrator.HealthKind{registrator.HealthKindTTL, registrator.HealthKindGRPC},
 	})
 
 	// start target handler, which enables crud operations for targets
