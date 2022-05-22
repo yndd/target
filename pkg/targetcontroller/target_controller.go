@@ -118,6 +118,7 @@ func New(ctx context.Context, config *rest.Config, o *Options) (TargetController
 		stopCh:            make(chan bool),
 		registrator:       o.Registrator,
 		grpcServerAddress: o.GrpcServerAddress,
+		ctx:               ctx,
 	}
 
 	// initialize the multi-device cache
