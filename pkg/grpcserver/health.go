@@ -27,7 +27,7 @@ import (
 
 // Check implements `service Health`.
 func (s *GrpcServerImpl) Check(ctx context.Context, in *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {
-	s.log.Debug("gnmi server health check", "service", in.Service)
+	s.log.Debug("grpc server health check", "service", in.Service)
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	//if servingStatus, ok := s.statusMap[in.Service]; ok {
@@ -41,7 +41,7 @@ func (s *GrpcServerImpl) Check(ctx context.Context, in *healthpb.HealthCheckRequ
 
 // Watch implements `service Health`.
 func (s *GrpcServerImpl) Watch(in *healthpb.HealthCheckRequest, stream healthgrpc.Health_WatchServer) error {
-	s.log.Debug("gnmi server health watch", "service", in.Service)
+	s.log.Debug("grpc server health watch", "service", in.Service)
 
 	//service := in.Service
 	service := ""
