@@ -234,9 +234,11 @@ func (s *GrpcServerImpl) run() error {
 	// attach the gnmi service to the grpc server
 	if s.gnmi {
 		gnmi.RegisterGNMIServer(grpcServer, s)
+		log.Debug("grpc server with gnmi...")
 	}
 	if s.health {
 		healthgrpc.RegisterHealthServer(grpcServer, s)
+		log.Debug("grpc server with health...")
 	}
 
 	// start the server
