@@ -27,3 +27,4 @@ testbin/*
 *.swo
 *~
 PRIVATE.md
+.vscode

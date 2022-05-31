@@ -13,7 +13,6 @@ require (
 	github.com/yndd/ndd-yang v0.2.8
 	github.com/yndd/nddp-system v0.2.4
 	github.com/yndd/registrator v0.0.19
-	github.com/yndd/topology v0.0.6
 	golang.org/x/sync v0.0.0-20220513210516-0976fa681c29
 	google.golang.org/grpc v1.46.0
 	k8s.io/api v0.24.1
@@ -128,7 +127,6 @@ require (
 	github.com/stoewer/go-strcase v1.2.0 // indirect
 	github.com/ugorji/go/codec v1.2.6 // indirect
 	github.com/xanzy/ssh-agent v0.3.1 // indirect
-	github.com/yndd/app-runtime v0.0.6 // indirect
 	github.com/zealic/xignore v0.3.3 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
 	go.opencensus.io v0.23.0 // indirect

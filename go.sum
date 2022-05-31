@@ -1706,8 +1706,6 @@ github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8/go.mod h1:HUYIGzjTL3rfEspMx
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 github.com/xlab/treeprint v0.0.0-20181112141820-a009c3971eca/go.mod h1:ce1O1j6UtZfjr22oyGxGLbauSBp2YVXpARAosm7dHBg=
 github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:aYKd//L2LvnjZzWKhF00oedf4jCCReLcmhLdhm1A27Q=
-github.com/yndd/app-runtime v0.0.6 h1:zalytGpzMtDno3kafJtBkQXUeFpvwNy4IZ9xALUoBDY=
-github.com/yndd/app-runtime v0.0.6/go.mod h1:M3fnYfiW2+jNcvCrg1fuNIra6sUpLueMteHOJ0S0YNc=
 github.com/yndd/ndd-core v0.1.6/go.mod h1:zlQTBILqiJlYj3WYy0yHGBBIMZemhVXoNnXE4vhF+pI=
 github.com/yndd/ndd-core v0.1.7/go.mod h1:zlQTBILqiJlYj3WYy0yHGBBIMZemhVXoNnXE4vhF+pI=
 github.com/yndd/ndd-core v0.2.19/go.mod h1:vL11h7D7PDf629XFxhLMa4OROZrq4GbsM6tmk+T93xQ=
@@ -1759,8 +1757,6 @@ github.com/yndd/nddr-org-registry v0.0.11/go.mod h1:5cVl1Cv1UczM72EXKJmjIzrJAQH7
 github.com/yndd/nddr-topo-registry v0.0.4/go.mod h1:f5/qMkWQa7namvEgYrNZisgvhcee4bgnFCt30NWOcf8=
 github.com/yndd/registrator v0.0.19 h1:2f2OF/ISIulvyhVTVXvCwal8N6EntC+uPW6jX/sPtrA=
 github.com/yndd/registrator v0.0.19/go.mod h1:6y85l1HVkcwJNSknGFyx8jBmw4VDgRUaF0Spku6sHiw=
-github.com/yndd/topology v0.0.6 h1:N+7CuQiezOwf5l3m/Z0U5dYy4kU3yXWO2/lmfHDIzu4=
-github.com/yndd/topology v0.0.6/go.mod h1:zEReUqOQ1wuKoE5RQYppmptAj1LlSuWwAQMg0iOFoC0=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
