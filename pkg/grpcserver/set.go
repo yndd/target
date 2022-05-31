@@ -18,17 +18,13 @@ package grpcserver
 
 import (
 	"context"
-	"reflect"
 	"time"
 
 	"github.com/openconfig/gnmi/proto/gnmi"
-	"github.com/yndd/target/internal/cache"
+	"github.com/yndd/ndd-yang/pkg/yparser"
 	"github.com/yndd/target/internal/targetchannel"
 	"github.com/yndd/target/internal/validator"
-	"github.com/yndd/ndd-runtime/pkg/model"
 	"github.com/yndd/target/pkg/cachename"
-	"github.com/yndd/target/pkg/ygotnddtarget"
-	"github.com/yndd/ndd-yang/pkg/yparser"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -61,21 +57,6 @@ func (s *GrpcServerImpl) Set(ctx context.Context, req *gnmi.SetRequest) (*gnmi.S
 		"numReplaces", numReplaces,
 		"numDeletes", numDeletes,
 	)
-
-	// for origin == target we need to initialize the cache if it does not exist
-	if prefix.GetOrigin() == cachename.TargetCachePrefix {
-		if !s.cache.Exists(cacheNsTargetName) {
-			ce := cache.NewCacheEntry(cacheNsTargetName)
-			ce.SetModel(&model.Model{
-				ModelData:       []*gnmi.ModelData{},
-				StructRootType:  reflect.TypeOf((*ygotnddtarget.NddTarget_TargetEntry)(nil)),
-				SchemaTreeRoot:  ygotnddtarget.SchemaTree["NddTarget_TargetEntry"],
-				JsonUnmarshaler: ygotnddtarget.Unmarshal,
-				EnumData:        ygotnddtarget.ΛEnum,
-			})
-			s.cache.AddEntry(ce)
-		}
-	}
 
 	ce, err := s.cache.GetEntry(cacheNsTargetName)
 	if err != nil {

@@ -20,7 +20,6 @@ import (
 	"context"
 	"encoding/json"
 	"os"
-	"reflect"
 	"strings"
 	"time"
 
@@ -41,7 +40,6 @@ import (
 	"github.com/yndd/target/internal/targetreconciler"
 	"github.com/yndd/target/pkg/cachename"
 	"github.com/yndd/target/pkg/target"
-	"github.com/yndd/target/pkg/ygotnddtarget"
 	"google.golang.org/grpc"
 	corev1 "k8s.io/api/core/v1"
 	k8stypes "k8s.io/apimachinery/pkg/types"
@@ -191,12 +189,6 @@ func NewTargetInstance(ctx context.Context, namespace, nsTargetName, targetName 
 		paths:        []*string{utils.StringPtr("/")},
 		stopCh:       make(chan struct{}),
 		//newTarget:    tg,
-		targetModel: &model.Model{
-			StructRootType:  reflect.TypeOf((*ygotnddtarget.NddTarget_TargetEntry)(nil)),
-			SchemaTreeRoot:  ygotnddtarget.SchemaTree["NddTarget_TargetEntry"],
-			JsonUnmarshaler: ygotnddtarget.Unmarshal,
-			EnumData:        ygotnddtarget.ΛEnum,
-		},
 	}
 
 	for _, opt := range opts {
