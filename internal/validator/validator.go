@@ -12,7 +12,7 @@ import (
 	"github.com/openconfig/ygot/ygot"
 	"github.com/openconfig/ygot/ytypes"
 	"github.com/pkg/errors"
-	"github.com/yndd/ndd-target-runtime/internal/cache"
+	"github.com/yndd/target/internal/cache"
 	"github.com/yndd/ndd-yang/pkg/yparser"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

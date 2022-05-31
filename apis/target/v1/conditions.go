@@ -14,8 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//+kubebuilder:object:generate=true
-//+groupName=dvr.ndd.yndd.io
 package v1
 
 import (

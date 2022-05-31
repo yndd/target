@@ -28,8 +28,8 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/yndd/ndd-runtime/pkg/logging"
-	"github.com/yndd/ndd-target-runtime/internal/cache"
-	"github.com/yndd/ndd-target-runtime/internal/targetchannel"
+	"github.com/yndd/target/internal/cache"
+	"github.com/yndd/target/internal/targetchannel"
 	"golang.org/x/sync/semaphore"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"

@@ -15,6 +15,7 @@ limitations under the License.
 */
 package shared
 
+/*
 import (
 	"time"
 
@@ -36,3 +37,4 @@ type NddControllerOptions struct {
 	Copts                     controller.Options
 	Registrator               registrator.Registrator
 }
+*/

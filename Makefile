@@ -1,8 +1,9 @@
 # ====================================================================================
 # Setup Project
 
-PROJECT_NAME := ndd-target-runtime
-PROJECT_REPO := github.com/yndd/$(PROJECT_NAME)
+PROJECT_NAME := target
+REPO ?= yndd
+PROJECT_REPO := github.com/$(REPO)/$(PROJECT_NAME)
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))

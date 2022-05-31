@@ -31,17 +31,17 @@ import (
 	pkgv1 "github.com/yndd/ndd-core/apis/pkg/v1"
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/ndd-runtime/pkg/model"
+	"github.com/yndd/ndd-runtime/pkg/resource"
 	"github.com/yndd/ndd-runtime/pkg/utils"
-	targetv1 "github.com/yndd/ndd-target-runtime/apis/dvr/v1"
-	"github.com/yndd/ndd-target-runtime/internal/cache"
-	"github.com/yndd/ndd-target-runtime/internal/targetcollector"
-	"github.com/yndd/ndd-target-runtime/internal/targetreconciler"
-	"github.com/yndd/ndd-target-runtime/pkg/cachename"
-	"github.com/yndd/ndd-target-runtime/pkg/resource"
-	"github.com/yndd/ndd-target-runtime/pkg/target"
-	"github.com/yndd/ndd-target-runtime/pkg/ygotnddtarget"
 	"github.com/yndd/nddp-system/pkg/ygotnddp"
 	"github.com/yndd/registrator/registrator"
+	targetv1 "github.com/yndd/target/apis/target/v1"
+	"github.com/yndd/target/internal/cache"
+	"github.com/yndd/target/internal/targetcollector"
+	"github.com/yndd/target/internal/targetreconciler"
+	"github.com/yndd/target/pkg/cachename"
+	"github.com/yndd/target/pkg/target"
+	"github.com/yndd/target/pkg/ygotnddtarget"
 	"google.golang.org/grpc"
 	corev1 "k8s.io/api/core/v1"
 	k8stypes "k8s.io/apimachinery/pkg/types"
@@ -156,7 +156,7 @@ type targetInstance struct {
 	// controller info
 	//controllerName string
 	// target info
-	newTarget       func() targetv1.Tg
+	//newTarget       func() targetv1.Tg
 	nsTargetName    string
 	targetName      string
 	namespace       string
@@ -182,7 +182,7 @@ type targetInstance struct {
 }
 
 func NewTargetInstance(ctx context.Context, namespace, nsTargetName, targetName string, opts ...TargetInstanceOption) (TargetInstance, error) {
-	tg := func() targetv1.Tg { return &targetv1.Target{} }
+	//tg := func() targetv1.Tg { return &targetv1.Target{} }
 
 	ti := &targetInstance{
 		nsTargetName: nsTargetName,
@@ -190,7 +190,7 @@ func NewTargetInstance(ctx context.Context, namespace, nsTargetName, targetName 
 		namespace:    namespace,
 		paths:        []*string{utils.StringPtr("/")},
 		stopCh:       make(chan struct{}),
-		newTarget:    tg,
+		//newTarget:    tg,
 		targetModel: &model.Model{
 			StructRootType:  reflect.TypeOf((*ygotnddtarget.NddTarget_TargetEntry)(nil)),
 			SchemaTreeRoot:  ygotnddtarget.SchemaTree["NddTarget_TargetEntry"],
@@ -212,7 +212,7 @@ func NewTargetInstance(ctx context.Context, namespace, nsTargetName, targetName 
 
 	// initialize the target which implements the specific gnmi calls for this vendor target type
 	var err error
-	ti.target, err = ti.targetRegistry.Initialize(ygotnddtarget.NddTarget_VendorType_nokia_srl)
+	ti.target, err = ti.targetRegistry.Initialize(targetv1.VendorTypeNokiaSRL)
 	if err != nil {
 		return nil, err
 	}
@@ -413,7 +413,8 @@ func (ti *targetInstance) StopTargetCollector() error {
 
 func (ti *targetInstance) getTargetConfig() (*types.TargetConfig, error) {
 	log := ti.log.WithValues("nsTargetName", ti.nsTargetName)
-	t := ti.newTarget()
+	//t := ti.newTarget()
+	t := &targetv1.Target{}
 	if err := ti.client.Get(ti.ctx, k8stypes.NamespacedName{
 		Namespace: ti.namespace,
 		Name:      ti.targetName,
@@ -424,13 +425,7 @@ func (ti *targetInstance) getTargetConfig() (*types.TargetConfig, error) {
 		return nil, err
 	}
 
-	tspec, err := t.GetSpec()
-	if err != nil {
-		log.Debug("Cannot get spec", "error", err)
-		return nil, err
-	}
-
-	creds, err := ti.getCredentials(ti.ctx, tspec)
+	creds, err := ti.getCredentials(ti.ctx, t.Spec.Properties)
 	if err != nil {
 		log.Debug("Cannot get credentials", "error", err)
 		return nil, err
@@ -438,12 +433,12 @@ func (ti *targetInstance) getTargetConfig() (*types.TargetConfig, error) {
 
 	return &types.TargetConfig{
 		Name:       ti.targetName,
-		Address:    *tspec.GetConfig().Address,
+		Address:    t.Spec.Properties.Config.Address,
 		Username:   &creds.Username,
 		Password:   &creds.Password,
 		Timeout:    defaultTimeout,
-		Insecure:   tspec.GetConfig().Insecure,
-		SkipVerify: tspec.GetConfig().SkipVerify,
+		Insecure:   utils.BoolPtr(t.Spec.Properties.Config.Insecure),
+		SkipVerify: utils.BoolPtr(t.Spec.Properties.Config.SkipVerify),
 		TLSCA:      utils.StringPtr(""), //TODO TLS
 		TLSCert:    utils.StringPtr(""), //TODO TLS
 		TLSKey:     utils.StringPtr(""), //TODO TLS
@@ -459,15 +454,15 @@ type Credentials struct {
 
 // getCredentials retrieve the Login details from the target cr spec and validates the target details.
 // The target cr spec info is used to build the credentials for authentication to the target.
-func (ti *targetInstance) getCredentials(ctx context.Context, tspec *ygotnddtarget.NddTarget_TargetEntry) (creds *Credentials, err error) {
+func (ti *targetInstance) getCredentials(ctx context.Context, prop *targetv1.TargetProperties) (creds *Credentials, err error) {
 	// Retrieve the secret from Kubernetes for thistarget
-	credsSecret, err := ti.getSecret(ctx, tspec)
+	credsSecret, err := ti.getSecret(ctx, prop)
 	if err != nil {
 		return nil, err
 	}
 
 	// Check if address is defined on the target cr
-	if *tspec.Config.Address == "" {
+	if prop.Config.Address == "" {
 		return nil, errors.New(errEmptyTargetAddress)
 	}
 
@@ -489,15 +484,15 @@ func (ti *targetInstance) getCredentials(ctx context.Context, tspec *ygotnddtarg
 }
 
 // Retrieve the secret containing the credentials for authentiaction with the target.
-func (ti *targetInstance) getSecret(ctx context.Context, tspec *ygotnddtarget.NddTarget_TargetEntry) (credsSecret *corev1.Secret, err error) {
+func (ti *targetInstance) getSecret(ctx context.Context, prop *targetv1.TargetProperties) (credsSecret *corev1.Secret, err error) {
 	// check if credentialName is specified
-	if *tspec.Config.CredentialName == "" {
+	if prop.Config.CredentialName == "" {
 		return nil, errors.New(errEmptyTargetSecretReference)
 	}
 
 	// check if credential secret exists
 	secretKey := k8stypes.NamespacedName{
-		Name:      *tspec.Config.CredentialName,
+		Name:      prop.Config.CredentialName,
 		Namespace: ti.namespace,
 	}
 	credsSecret = &corev1.Secret{}

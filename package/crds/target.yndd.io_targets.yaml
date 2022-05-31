@@ -5,9 +5,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.8.0
   creationTimestamp: null
-  name: targets.dvr.ndd.yndd.io
+  name: targets.target.yndd.io
 spec:
-  group: dvr.ndd.yndd.io
+  group: target.yndd.io
   names:
     categories:
     - ndd
@@ -76,12 +76,42 @@ spec:
           metadata:
             type: object
           spec:
-            description: TargetSpec defines the desired spec of target
+            description: TargetSpec struct
             properties:
               properties:
-                description: Contains all fields for the specific resource being addressed
+                description: Properties define the properties of the Target
+                properties:
+                  allocation:
+                    additionalProperties:
+                      properties:
+                        serviceIdentity:
+                          type: string
+                        serviceName:
+                          type: string
+                      type: object
+                    type: object
+                  config:
+                    properties:
+                      address:
+                        type: string
+                      credentialName:
+                        type: string
+                      encoding:
+                        type: string
+                      insecure:
+                        type: boolean
+                      protocol:
+                        type: string
+                      proxy:
+                        type: string
+                      skipVerify:
+                        type: boolean
+                      tlsCredentialname:
+                        type: string
+                    type: object
+                  vendorType:
+                    type: string
                 type: object
-                x-kubernetes-preserve-unknown-fields: true
             type: object
           status:
             description: TargetStatus defines the observed state of TargetNode
@@ -134,24 +164,24 @@ spec:
                   hostname:
                     description: Host name of the target
                     type: string
-                  kind:
-                    description: the Kind of the target
-                    type: string
-                  mac-address:
+                  macAddress:
                     description: the Mac address of the target
                     type: string
-                  serial-number:
+                  platform:
+                    description: the Kind of the target
+                    type: string
+                  serialNumber:
                     description: the Serial Number of the target
                     type: string
-                  supported-encodings:
+                  supportedEncodings:
                     description: Supported Encodings of the target
                     items:
                       type: string
                     type: array
-                  sw-version:
+                  swVersion:
                     description: SW version of the target
                     type: string
-                  vendor-type:
+                  vendorType:
                     description: the VendorType of the target
                     type: string
                 type: object

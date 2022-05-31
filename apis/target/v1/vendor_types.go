@@ -1,5 +1,5 @@
 /*
-Copyright 2022 NDD.
+Copyright 2021 Wim Henderickx.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,14 +16,11 @@ limitations under the License.
 
 package v1
 
-import (
-	"k8s.io/apimachinery/pkg/util/validation/field"
+type VendorType string
+
+// VendorType enum.
+const (
+	VendorTypeUnknown   VendorType = "unknown"
+	VendorTypeNokiaSRL  VendorType = "nokiaSRL"
+	VendorTypeNokiaSROS VendorType = "nokiaSROS"
 )
-
-func ValidateSpec(spec []byte) *field.Error {
-	if _, err := m.NewConfigStruct(spec, false); err != nil {
-		return field.Invalid(field.NewPath("spec"), string(spec), err.Error())
-	}
-
-	return nil
-}

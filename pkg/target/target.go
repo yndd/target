@@ -25,8 +25,7 @@ import (
 	gnmictarget "github.com/karimra/gnmic/target"
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/yndd/ndd-runtime/pkg/logging"
-	targetv1 "github.com/yndd/ndd-target-runtime/apis/dvr/v1"
-	"github.com/yndd/ndd-target-runtime/pkg/ygotnddtarget"
+	targetv1 "github.com/yndd/target/apis/target/v1"
 )
 
 type Target interface {
@@ -51,35 +50,35 @@ type Target interface {
 // Targets interface to register target types that implement the Target interface
 type TargetRegistry interface {
 	// RegisterInitializer registers the vendor type and its respective initialize function
-	RegisterInitializer(name ygotnddtarget.E_NddTarget_VendorType, initFn Initializer)
+	RegisterInitializer(name targetv1.VendorType, initFn Initializer)
 	// Initialize returns a Target which implements the Target interface according the vendor type
-	Initialize(name ygotnddtarget.E_NddTarget_VendorType) (Target, error)
+	Initialize(name targetv1.VendorType) (Target, error)
 }
 
 // NewTargetRegistry create a registery for target vendor types that implement the Target interface
 func NewTargetRegistry() TargetRegistry {
 	return &targets{
-		targets: map[ygotnddtarget.E_NddTarget_VendorType]Initializer{},
+		targets: map[targetv1.VendorType]Initializer{},
 	}
 }
 
 type targets struct {
 	m       sync.RWMutex
-	targets map[ygotnddtarget.E_NddTarget_VendorType]Initializer
+	targets map[targetv1.VendorType]Initializer
 }
 
-func (t *targets) RegisterInitializer(name ygotnddtarget.E_NddTarget_VendorType, initFn Initializer) {
+func (t *targets) RegisterInitializer(name targetv1.VendorType, initFn Initializer) {
 	t.m.Lock()
 	defer t.m.Unlock()
 	t.targets[name] = initFn
 }
 
-func (t *targets) Initialize(name ygotnddtarget.E_NddTarget_VendorType) (Target, error) {
+func (t *targets) Initialize(name targetv1.VendorType) (Target, error) {
 	t.m.Lock()
 	defer t.m.Unlock()
 	targetInitializer, ok := t.targets[name]
 	if !ok {
-		return nil, fmt.Errorf("target not registered: %s\n", name.String())
+		return nil, fmt.Errorf("target not registered: %s\n", name)
 	}
 	target := targetInitializer()
 	return target, nil

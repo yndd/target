@@ -23,7 +23,7 @@ import (
 
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/openconfig/ygot/ygot"
-	"github.com/yndd/ndd-target-runtime/pkg/cachename"
+	"github.com/yndd/target/pkg/cachename"
 	"github.com/yndd/ndd-yang/pkg/yparser"
 	"github.com/yndd/nddp-system/pkg/ygotnddp"
 	"google.golang.org/grpc/codes"

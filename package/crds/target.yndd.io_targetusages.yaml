@@ -5,9 +5,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.8.0
   creationTimestamp: null
-  name: targetusages.dvr.ndd.yndd.io
+  name: targetusages.target.yndd.io
 spec:
-  group: dvr.ndd.yndd.io
+  group: target.yndd.io
   names:
     categories:
     - ndd

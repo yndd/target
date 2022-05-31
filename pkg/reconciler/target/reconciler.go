@@ -18,7 +18,6 @@ package target
 
 import (
 	"context"
-	"reflect"
 	"time"
 
 	"github.com/pkg/errors"
@@ -26,12 +25,9 @@ import (
 	"github.com/yndd/ndd-runtime/pkg/event"
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/ndd-runtime/pkg/meta"
-	"github.com/yndd/ndd-runtime/pkg/model"
-	targetv1 "github.com/yndd/ndd-target-runtime/apis/dvr/v1"
-	"github.com/yndd/ndd-target-runtime/internal/targetchannel"
-	"github.com/yndd/ndd-target-runtime/pkg/resource"
-	"github.com/yndd/ndd-target-runtime/pkg/ygotnddtarget"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"github.com/yndd/ndd-runtime/pkg/resource"
+	targetv1 "github.com/yndd/target/apis/target/v1"
+	"github.com/yndd/target/internal/targetchannel"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -39,7 +35,7 @@ import (
 
 const (
 	// timers
-	targetFinalizerName  = "finalizer.target.dvr.ndd.yndd.io"
+	targetFinalizerName  = "target.yndd.io/finalizer"
 	reconcileGracePeriod = 30 * time.Second
 	reconcileTimeout     = 1 * time.Minute
 	shortWait            = 30 * time.Second
@@ -74,13 +70,13 @@ const (
 type Reconciler struct {
 	// config info
 	address            string
-	expectedVendorType ygotnddtarget.E_NddTarget_VendorType
-	newTarget          func() targetv1.Tg
-	targetCh           chan targetchannel.TargetMsg
+	expectedVendorType targetv1.VendorType
+	//newTarget          func() targetv1.Tg
+	targetCh chan targetchannel.TargetMsg
 
 	// target models
-	m  *model.Model
-	fm *model.Model
+	//m  *model.Model
+	//fm *model.Model
 
 	// k8s api
 	client    client.Client
@@ -108,7 +104,7 @@ func WithAddress(a string) ReconcilerOption {
 }
 
 // WithExpectedVendorType specifies the vendorType the reconciler cares about
-func WithExpectedVendorType(t ygotnddtarget.E_NddTarget_VendorType) ReconcilerOption {
+func WithExpectedVendorType(t targetv1.VendorType) ReconcilerOption {
 	return func(r *Reconciler) {
 		r.expectedVendorType = t
 	}
@@ -157,13 +153,15 @@ func WithTargetChannel(tc chan targetchannel.TargetMsg) ReconcilerOption {
 
 // NewReconciler returns a Reconciler that reconciles target resources
 func NewReconciler(m manager.Manager, o ...ReconcilerOption) *Reconciler {
-	tg := func() targetv1.Tg {
-		return resource.MustCreateObject(schema.GroupVersionKind(targetv1.TargetGroupVersionKind), m.GetScheme()).(targetv1.Tg)
-	}
+	/*
+		tg := func() targetv1.Tg {
+			return resource.MustCreateObject(schema.GroupVersionKind(targetv1.TargetGroupVersionKind), m.GetScheme()).(targetv1.Tg)
+		}
+	*/
 
 	// Panic early if we've been asked to reconcile a resource kind that has not
 	// been registered with our controller manager's scheme.
-	_ = tg()
+	//_ = tg()
 
 	/*
 		tfm := &model.Model{
@@ -174,18 +172,20 @@ func NewReconciler(m manager.Manager, o ...ReconcilerOption) *Reconciler {
 		}
 	*/
 
-	tm := &model.Model{
-		StructRootType:  reflect.TypeOf((*ygotnddtarget.NddTarget_TargetEntry)(nil)),
-		SchemaTreeRoot:  ygotnddtarget.SchemaTree["NddTarget_TargetEntry"],
-		JsonUnmarshaler: ygotnddtarget.Unmarshal,
-		EnumData:        ygotnddtarget.ΛEnum,
-	}
+	/*
+		tm := &model.Model{
+			StructRootType:  reflect.TypeOf((*ygotnddtarget.NddTarget_TargetEntry)(nil)),
+			SchemaTreeRoot:  ygotnddtarget.SchemaTree["NddTarget_TargetEntry"],
+			JsonUnmarshaler: ygotnddtarget.Unmarshal,
+			EnumData:        ygotnddtarget.ΛEnum,
+		}
+	*/
 
 	r := &Reconciler{
-		client:    m.GetClient(),
-		newTarget: tg,
+		client: m.GetClient(),
+		//newTarget: tg,
 		//fm:           tfm,
-		m:            tm,
+		//m:            tm,
 		pollInterval: defaultpollInterval,
 		timeout:      reconcileTimeout,
 		log:          logging.NewNopLogger(),
@@ -216,7 +216,7 @@ func (r *Reconciler) Reconcile(_ context.Context, req reconcile.Request) (reconc
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout+reconcileGracePeriod)
 	defer cancel()
 
-	t := r.newTarget()
+	t := &targetv1.Target{}
 	if err := r.client.Get(ctx, req.NamespacedName, t); err != nil {
 		// There's no need to requeue if we no longer exist. Otherwise we'll be
 		// requeued implicitly because we return an error.
@@ -230,25 +230,18 @@ func (r *Reconciler) Reconcile(_ context.Context, req reconcile.Request) (reconc
 		"version", t.GetResourceVersion(),
 	)
 
-	tspec, err := t.GetSpec()
-	if err != nil {
-		log.Debug("Cannot get spec", "error", err)
-		t.SetConditions(nddv1.ReconcileError(err), nddv1.Unknown())
-		return reconcile.Result{Requeue: true}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
-	}
-
 	// if expectedVendorType is unset we dont care about it and can proceed,
 	// if it is set we should see if the Target CR vendor type matches the
 	// expected vendorType
-	if r.expectedVendorType != ygotnddtarget.NddTarget_VendorType_undefined {
+	if r.expectedVendorType != targetv1.VendorTypeUnknown {
 		// expected vendor type is set, so we compare expected and configured vendor Type
 
 		// if the expected vendor type does not match we return as the CR is not
 		// relevant to proceed
-		if r.expectedVendorType != tspec.VendorType {
-			log.Debug("unexpected vendor type", "crVendorType", tspec.VendorType, "expectedVendorType", r.expectedVendorType)
+		if r.expectedVendorType != t.Spec.Properties.VendorType {
+			log.Debug("unexpected vendor type", "crVendorType", t.Spec.Properties.VendorType, "expectedVendorType", r.expectedVendorType)
 			// if the spec is no longer related to the vendor we want to remove the discovery information
-			if tspec.GetState() != nil && tspec.GetState().VendorType == r.expectedVendorType {
+			if t.Status.DiscoveryInfo != nil && t.Status.DiscoveryInfo.VendorType == r.expectedVendorType {
 				t.SetConditions(nddv1.Unknown())
 				t.SetDiscoveryInfo(nil)
 				return reconcile.Result{Requeue: true}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)

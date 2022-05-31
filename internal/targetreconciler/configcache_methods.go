@@ -21,8 +21,8 @@ import (
 
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/openconfig/ygot/ygot"
-	"github.com/yndd/ndd-target-runtime/internal/validator"
-	"github.com/yndd/ndd-target-runtime/pkg/cachename"
+	"github.com/yndd/target/internal/validator"
+	"github.com/yndd/target/pkg/cachename"
 	"github.com/yndd/nddp-system/pkg/ygotnddp"
 )
 

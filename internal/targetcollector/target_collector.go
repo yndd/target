@@ -24,7 +24,7 @@ import (
 	"github.com/karimra/gnmic/types"
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/pkg/errors"
-	"github.com/yndd/ndd-target-runtime/internal/cache"
+	"github.com/yndd/target/internal/cache"
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"google.golang.org/grpc"
 	"sigs.k8s.io/controller-runtime/pkg/event"

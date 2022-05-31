@@ -16,14 +16,10 @@ limitations under the License.
 package v1
 
 import (
-	"errors"
-
 	nddv1 "github.com/yndd/ndd-runtime/apis/common/v1"
-	"github.com/yndd/ndd-runtime/pkg/resource"
-	"github.com/yndd/ndd-target-runtime/pkg/ygotnddtarget"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+/*
 var _ TgList = &TargetList{}
 
 // +k8s:deepcopy-gen=false
@@ -43,7 +39,6 @@ func (x *TargetList) GetTargets() []Tg {
 }
 
 var _ Tg = &Target{}
-
 // +k8s:deepcopy-gen=false
 type Tg interface {
 	resource.Object
@@ -57,6 +52,7 @@ type Tg interface {
 	GetDiscoveryInfo() DiscoveryInfo
 	SetDiscoveryInfo(dd *DiscoveryInfo)
 }
+*/
 
 // GetCondition of this Network Node.
 func (t *Target) GetCondition(ct nddv1.ConditionKind) nddv1.Condition {
@@ -78,6 +74,7 @@ func (t *Target) SetControllerReference(c nddv1.Reference) {
 	t.Status.ControllerRef = c
 }
 
+/*
 func (t *Target) GetSpec() (*ygotnddtarget.NddTarget_TargetEntry, error) {
 	validatedGoStruct, err := m.NewConfigStruct(t.Spec.Properties.Raw, true)
 	if err != nil {
@@ -90,6 +87,7 @@ func (t *Target) GetSpec() (*ygotnddtarget.NddTarget_TargetEntry, error) {
 
 	return targetEntry, nil
 }
+*/
 
 func (t *Target) GetDiscoveryInfo() DiscoveryInfo {
 	return *t.Status.DiscoveryInfo

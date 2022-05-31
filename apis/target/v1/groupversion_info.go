@@ -16,7 +16,7 @@ limitations under the License.
 
 // Package v1 contains API Schema definitions for the driver v1 API group
 //+kubebuilder:object:generate=true
-//+groupName=dvr.ndd.yndd.io
+//+groupName=target.yndd.io
 package v1
 
 import (
@@ -28,7 +28,7 @@ import (
 
 // Package type metadata.
 const (
-	Group   = "dvr.ndd.yndd.io"
+	Group   = "target.yndd.io"
 	Version = "v1"
 )
 
