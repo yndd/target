@@ -23,7 +23,7 @@ import (
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/pkg/errors"
 	"github.com/yndd/target/pkg/cachename"
-	"github.com/yndd/target/internal/validator"
+	"github.com/yndd/target/pkg/validator"
 	"github.com/yndd/ndd-yang/pkg/yparser"
 	"github.com/yndd/nddp-system/pkg/gvkresource"
 	"github.com/yndd/nddp-system/pkg/ygotnddp"

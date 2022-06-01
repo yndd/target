@@ -23,7 +23,7 @@ import (
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/yndd/ndd-yang/pkg/yparser"
 	"github.com/yndd/ndd-runtime/pkg/targetchannel"
-	"github.com/yndd/target/internal/validator"
+	"github.com/yndd/target/pkg/validator"
 	"github.com/yndd/target/pkg/cachename"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
