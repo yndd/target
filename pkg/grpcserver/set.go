@@ -21,13 +21,12 @@ import (
 	"time"
 
 	"github.com/openconfig/gnmi/proto/gnmi"
+	"github.com/yndd/ndd-runtime/pkg/meta"
 	"github.com/yndd/ndd-yang/pkg/yparser"
-	"github.com/yndd/ndd-runtime/pkg/targetchannel"
+	"github.com/yndd/target/pkg/origin"
 	"github.com/yndd/target/pkg/validator"
-	"github.com/yndd/target/pkg/cachename"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"github.com/yndd/ndd-runtime/pkg/meta"
 )
 
 func (s *GrpcServerImpl) Set(ctx context.Context, req *gnmi.SetRequest) (*gnmi.SetResponse, error) {
@@ -46,7 +45,7 @@ func (s *GrpcServerImpl) Set(ctx context.Context, req *gnmi.SetRequest) (*gnmi.S
 	numDeletes := len(req.GetDelete())
 	if numUpdates+numReplaces+numDeletes == 0 {
 		// for origin == target cache updates we can have an empty path
-		if prefix.GetOrigin() != cachename.TargetCachePrefix {
+		if prefix.GetOrigin() != origin.Target {
 			return nil, status.Errorf(codes.InvalidArgument, errMissingPathsInGNMISet)
 		}
 	}
@@ -98,25 +97,8 @@ func (s *GrpcServerImpl) Set(ctx context.Context, req *gnmi.SetRequest) (*gnmi.S
 		return nil, status.Errorf(codes.Unimplemented, "not implemented")
 	}
 
-	// the gnmi proxy cache holds 3 origins: target, system and config.
-	// the set will only update origin = target or system, not config
-	// for target updates we need to inform the the targetDriver through the channel
-	// for system cache updates we need to set a flag such that the target reconciler picks it up
-	if prefix.GetOrigin() == cachename.TargetCachePrefix {
-		// we only perform replace or delete on the target object -> replace = start, delete = stop
-		targetOperation := targetchannel.Start
-		// in the target case the delete is represented with 0 paths
-		if numUpdates+numReplaces+numDeletes == 0 {
-			targetOperation = targetchannel.Stop
-		}
-		s.targetChannel <- targetchannel.TargetMsg{
-			Target:    prefix.GetTarget(),
-			Operation: targetOperation,
-		}
-	} else {
-		if err := ce.SetSystemCacheStatus(true); err != nil {
-			return nil, status.Errorf(codes.Internal, err.Error())
-		}
+	if err := ce.SetSystemCacheStatus(true); err != nil {
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
 	return &gnmi.SetResponse{

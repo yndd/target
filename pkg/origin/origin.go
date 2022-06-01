@@ -14,16 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cachename
-
-// namespacedName = <namespace/name>
-// cacheNsName = <prefix/namespace/name>
-// systemCachName = system/<namespace>/<targetname>
-// configCachName = config/<namespace>/<targetname>
-// targetCachName = target/<namespace>/<targetname>
+package origin
 
 const (
-	SystemCachePrefix = "system"
-	ConfigCachePrefix = "config"
-	TargetCachePrefix = "target"
+	System = "system"
+	Config = "config"
+	State  = "state"
+	Metric = "metric"
+	Flow   = "flow"
+	Log    = "log"
 )

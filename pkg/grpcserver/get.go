@@ -67,7 +67,7 @@ func (s *GrpcServerImpl) HandleGet(req *gnmi.GetRequest) ([]*gnmi.Notification, 
 	return populateNotification(goStruct, req, model, ts, prefix)
 }
 
-func populateNotification(goStruct ygot.GoStruct, req *gnmi.GetRequest, model *model.Model, ts int64, prefix *gnmi.Path) ([]*gnmi.Notification, error) {
+func populateNotification(goStruct ygot.ValidatedGoStruct, req *gnmi.GetRequest, model *model.Model, ts int64, prefix *gnmi.Path) ([]*gnmi.Notification, error) {
 	notifications := make([]*gnmi.Notification, len(req.GetPath()))
 	// process all the paths from the given request
 	for i, path := range req.GetPath() {
@@ -98,7 +98,7 @@ func populateNotification(goStruct ygot.GoStruct, req *gnmi.GetRequest, model *m
 		// generate updates for all the retrieved nodes
 		for _, entry := range nodes {
 			node := entry.Data
-			nodeStruct, isYgotStruct := node.(ygot.GoStruct)
+			nodeStruct, isYgotStruct := node.(ygot.ValidatedGoStruct)
 
 			// it seems like there is a chance we get nil structs,
 			// these should be skipped
@@ -148,7 +148,7 @@ func populateNotification(goStruct ygot.GoStruct, req *gnmi.GetRequest, model *m
 
 // processYgotStruct processes the ygot.GoStruct and combine it into the given resultCollectorYgotDevice
 // with the purpose of merging the different results of a wildcard query into a single gnmi.update
-func processYgotStruct(entry *ytypes.TreeNode, nodeStruct ygot.GoStruct, model *model.Model, resultCollectorYgotDevice ygot.GoStruct) error {
+func processYgotStruct(entry *ytypes.TreeNode, nodeStruct ygot.ValidatedGoStruct, model *model.Model, resultCollectorYgotDevice ygot.ValidatedGoStruct) error {
 	// convert config to GnmiNotification
 	notifications, err := ygot.TogNMINotifications(nodeStruct, 0, ygot.GNMINotificationsConfig{UsePathElem: true})
 	if err != nil {

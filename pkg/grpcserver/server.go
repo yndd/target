@@ -33,7 +33,6 @@ import (
 	"golang.org/x/sync/semaphore"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 )
@@ -104,8 +103,8 @@ type config struct {
 	//maxSubscriptions int64
 	//maxUnaryRPC      int64
 	// TLS
-	inSecure   bool
-	skipVerify bool
+	//inSecure   bool
+	//skipVerify bool
 	//caFile     string
 	//certFile   string
 	//keyFile    string
@@ -120,7 +119,7 @@ type GrpcServerImpl struct {
 	gnmi   bool
 
 	gnmi.UnimplementedGNMIServer
-	healthgrpc.UnimplementedHealthServer
+	healthpb.UnimplementedHealthServer
 
 	cfg *config
 
@@ -139,7 +138,7 @@ type GrpcServerImpl struct {
 	// health: statusMap stores the serving status of the services this Server monitors.
 	mu        sync.RWMutex
 	statusMap map[string]healthpb.HealthCheckResponse_ServingStatus
-	updates   map[string]map[healthgrpc.Health_WatchServer]chan healthpb.HealthCheckResponse_ServingStatus
+	updates   map[string]map[healthpb.Health_WatchServer]chan healthpb.HealthCheckResponse_ServingStatus
 	// logging and parsing
 	log logging.Logger
 
@@ -151,7 +150,7 @@ func New(address string, opts ...Option) GrpcServer {
 	s := &GrpcServerImpl{
 		//m: match.New(),
 		statusMap: map[string]healthpb.HealthCheckResponse_ServingStatus{"": healthpb.HealthCheckResponse_SERVING},
-		updates:   make(map[string]map[healthgrpc.Health_WatchServer]chan healthpb.HealthCheckResponse_ServingStatus),
+		updates:   make(map[string]map[healthpb.Health_WatchServer]chan healthpb.HealthCheckResponse_ServingStatus),
 		cfg: &config{
 			address: address,
 			//skipVerify: true,
@@ -237,7 +236,7 @@ func (s *GrpcServerImpl) run() error {
 		log.Debug("grpc server with gnmi...")
 	}
 	if s.health {
-		healthgrpc.RegisterHealthServer(grpcServer, s)
+		healthpb.RegisterHealthServer(grpcServer, s)
 		log.Debug("grpc server with health...")
 	}
 

@@ -20,7 +20,6 @@ import (
 	"context"
 
 	"google.golang.org/grpc/codes"
-	healthgrpc "google.golang.org/grpc/health/grpc_health_v1"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/status"
 )
@@ -40,7 +39,7 @@ func (s *GrpcServerImpl) Check(ctx context.Context, in *healthpb.HealthCheckRequ
 }
 
 // Watch implements `service Health`.
-func (s *GrpcServerImpl) Watch(in *healthpb.HealthCheckRequest, stream healthgrpc.Health_WatchServer) error {
+func (s *GrpcServerImpl) Watch(in *healthpb.HealthCheckRequest, stream healthpb.Health_WatchServer) error {
 	s.log.Debug("grpc server health watch", "service", in.Service)
 
 	//service := in.Service
@@ -57,7 +56,7 @@ func (s *GrpcServerImpl) Watch(in *healthpb.HealthCheckRequest, stream healthgrp
 
 	// Registers the update channel to the correct place in the updates map.
 	if _, ok := s.updates[service]; !ok {
-		s.updates[service] = make(map[healthgrpc.Health_WatchServer]chan healthpb.HealthCheckResponse_ServingStatus)
+		s.updates[service] = make(map[healthpb.Health_WatchServer]chan healthpb.HealthCheckResponse_ServingStatus)
 	}
 	s.updates[service][stream] = update
 	defer func() {
