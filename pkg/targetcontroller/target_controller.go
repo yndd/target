@@ -39,6 +39,7 @@ import (
 	"github.com/yndd/target/pkg/target"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/event"
+	"github.com/yndd/ndd-runtime/pkg/meta"
 )
 
 const (
@@ -160,7 +161,7 @@ func (c *targetControllerImpl) DeleteTargetInstance(nsTargetName string) error {
 		ti.DeRegister()
 	}
 	delete(c.targets, nsTargetName)
-	targetCacheNsTargetName := cachename.NamespacedName(nsTargetName).GetPrefixNamespacedName(cachename.TargetCachePrefix)
+	targetCacheNsTargetName := meta.NamespacedName(nsTargetName).GetPrefixNamespacedName(cachename.TargetCachePrefix)
 	c.cache.DeleteEntry(targetCacheNsTargetName)
 	return nil
 }
@@ -252,10 +253,10 @@ func (c *targetControllerImpl) startTarget(nsTargetName string) error {
 	log := c.log.WithValues("nsTargetName", nsTargetName)
 	log.Debug("start target...")
 	// the target we get on the channel has <namespace.target> semantics
-	targetName := cachename.NamespacedName(nsTargetName).GetName()
-	namespace := cachename.NamespacedName(nsTargetName).GetNameSpace()
+	targetName := meta.NamespacedName(nsTargetName).GetName()
+	namespace := meta.NamespacedName(nsTargetName).GetNameSpace()
 
-	targetCacheNsTargetName := cachename.NamespacedName(nsTargetName).GetPrefixNamespacedName(cachename.TargetCachePrefix)
+	targetCacheNsTargetName := meta.NamespacedName(nsTargetName).GetPrefixNamespacedName(cachename.TargetCachePrefix)
 	if !c.cache.Exists(targetCacheNsTargetName) {
 		return fmt.Errorf("target cache not initialized: %s", targetCacheNsTargetName)
 	}
@@ -287,13 +288,13 @@ func (c *targetControllerImpl) startTarget(nsTargetName string) error {
 	//c.targetModel.ModelData = model.GetModelData(cap.SupportedModels)
 
 	// initialize the config target cache
-	configCacheNsTargetName := cachename.NamespacedName(nsTargetName).GetPrefixNamespacedName(cachename.ConfigCachePrefix)
+	configCacheNsTargetName := meta.NamespacedName(nsTargetName).GetPrefixNamespacedName(cachename.ConfigCachePrefix)
 	cce := cache.NewCacheEntry(configCacheNsTargetName)
 	cce.SetModel(c.options.TargetModel)
 	c.cache.AddEntry(cce)
 
 	// initialize the system target cache
-	systemCacheNsTargetName := cachename.NamespacedName(nsTargetName).GetPrefixNamespacedName(cachename.SystemCachePrefix)
+	systemCacheNsTargetName := meta.NamespacedName(nsTargetName).GetPrefixNamespacedName(cachename.SystemCachePrefix)
 	sce := cache.NewCacheEntry(systemCacheNsTargetName)
 	sce.SetModel(&model.Model{
 		ModelData:       []*gnmi.ModelData{},
@@ -334,7 +335,7 @@ func (c *targetControllerImpl) stopTarget(nsTargetName string) error {
 	c.DeleteTargetInstance(nsTargetName)
 
 	// clear the cache from the device
-	targetCacheNsTargetName := cachename.NamespacedName(nsTargetName).GetPrefixNamespacedName(cachename.TargetCachePrefix)
+	targetCacheNsTargetName := meta.NamespacedName(nsTargetName).GetPrefixNamespacedName(cachename.TargetCachePrefix)
 	c.cache.DeleteEntry(targetCacheNsTargetName)
 	return nil
 }

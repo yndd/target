@@ -29,6 +29,7 @@ import (
 	"github.com/yndd/nddp-system/pkg/ygotnddp"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
+	"github.com/yndd/ndd-runtime/pkg/meta"
 )
 
 const (
@@ -45,9 +46,9 @@ func (c *collector) handleSubscription(resp *gnmi.SubscribeResponse) error {
 
 		// check if the target cache exists
 
-		nsTargetName := cachename.GetNamespacedName(c.namespace, c.gnmicTarget.Config.Name)
-		configCacheNsTargetName := cachename.NamespacedName(nsTargetName).GetPrefixNamespacedName(cachename.ConfigCachePrefix)
-		systemCacheNsTargetName := cachename.NamespacedName(nsTargetName).GetPrefixNamespacedName(cachename.SystemCachePrefix)
+		nsTargetName := meta.GetNamespacedName(c.namespace, c.gnmicTarget.Config.Name)
+		configCacheNsTargetName := meta.NamespacedName(nsTargetName).GetPrefixNamespacedName(cachename.ConfigCachePrefix)
+		systemCacheNsTargetName := meta.NamespacedName(nsTargetName).GetPrefixNamespacedName(cachename.SystemCachePrefix)
 
 		ce, err := c.cache.GetEntry(systemCacheNsTargetName)
 		if err != nil {

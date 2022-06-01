@@ -28,8 +28,8 @@ import (
 	"github.com/openconfig/ygot/util"
 	"github.com/openconfig/ygot/ygot"
 	"github.com/openconfig/ygot/ytypes"
+	"github.com/yndd/ndd-runtime/pkg/meta"
 	"github.com/yndd/ndd-runtime/pkg/model"
-	"github.com/yndd/target/pkg/cachename"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -53,7 +53,7 @@ func (s *GrpcServerImpl) HandleGet(req *gnmi.GetRequest) ([]*gnmi.Notification, 
 	log := s.log.WithValues("origin", prefix.GetOrigin(), "target", prefix.GetTarget())
 	log.Debug("Get...", "path", req.GetPath())
 
-	cacheNsTargetName := cachename.NamespacedName(prefix.GetTarget()).GetPrefixNamespacedName(prefix.GetOrigin())
+	cacheNsTargetName := meta.NamespacedName(prefix.GetTarget()).GetPrefixNamespacedName(prefix.GetOrigin())
 
 	ce, err := s.cache.GetEntry(cacheNsTargetName)
 	if err != nil {

@@ -44,6 +44,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	k8stypes "k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/event"
+	"github.com/yndd/ndd-runtime/pkg/meta"
 )
 
 const (
@@ -300,7 +301,7 @@ func (ti *targetInstance) GetInitialTargetConfig() error {
 	}
 
 	//fmt.Println(string(config))
-	configCacheNsTargetName := cachename.NamespacedName(ti.nsTargetName).GetPrefixNamespacedName(cachename.ConfigCachePrefix)
+	configCacheNsTargetName := meta.NamespacedName(ti.nsTargetName).GetPrefixNamespacedName(cachename.ConfigCachePrefix)
 	ce, err := ti.cache.GetEntry(configCacheNsTargetName)
 	if err != nil {
 		log.Debug("Get Device data from cache", "error", err)
@@ -319,7 +320,7 @@ func (ti *targetInstance) GetInitialTargetConfig() error {
 
 func (ti *targetInstance) InitializeSystemConfig() error {
 	log := ti.log.WithValues("nsTargetName", ti.nsTargetName)
-	systemCacheNsTargetName := cachename.NamespacedName(ti.nsTargetName).GetPrefixNamespacedName(cachename.SystemCachePrefix)
+	systemCacheNsTargetName := meta.NamespacedName(ti.nsTargetName).GetPrefixNamespacedName(cachename.SystemCachePrefix)
 
 	nddpData := &ygotnddp.Device{
 		Cache: &ygotnddp.NddpSystem_Cache{

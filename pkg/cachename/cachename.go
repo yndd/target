@@ -16,46 +16,14 @@ limitations under the License.
 
 package cachename
 
-import "strings"
-
-// namespacedName = <namespace.name>
-// cacheNsName = <prefix.namespace.name>
-// systemCachName = system.<namespace>.<targetname>
-// configCachName = config.<namespace>.<targetname>
-// targetCachName = target.<namespace>.<targetname>
+// namespacedName = <namespace/name>
+// cacheNsName = <prefix/namespace/name>
+// systemCachName = system/<namespace>/<targetname>
+// configCachName = config/<namespace>/<targetname>
+// targetCachName = target/<namespace>/<targetname>
 
 const (
 	SystemCachePrefix = "system"
 	ConfigCachePrefix = "config"
 	TargetCachePrefix = "target"
 )
-
-type NamespacedName string
-
-// GetNameSpace returns the namespace from the namespacedName
-func (t NamespacedName) GetNameSpace() string {
-	split := strings.SplitN(string(t), ".", 2)
-	if len(split) != 2 {
-		return ""
-	}
-	return split[0]
-}
-
-// GetName returns the name from the namespacedName
-func (t NamespacedName) GetName() string {
-	split := strings.SplitN(string(t), ".", 2)
-	if len(split) != 2 {
-		return ""
-	}
-	return split[1]
-}
-
-// GetPrefixNamespacedName return a cacheNsName from prefix and namespacedName
-func (t NamespacedName) GetPrefixNamespacedName(prefix string) string {
-	return strings.Join([]string{prefix, string(t)}, ".")
-}
-
-// GetNamespacedName returns a namespacedName from namespace and name
-func GetNamespacedName(namespace, name string) string {
-	return strings.Join([]string{namespace, name}, ".")
-}

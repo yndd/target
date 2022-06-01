@@ -9,7 +9,7 @@ require (
 	github.com/openconfig/ygot v0.17.0
 	github.com/pkg/errors v0.9.1
 	github.com/yndd/ndd-core v0.2.21
-	github.com/yndd/ndd-runtime v0.5.13
+	github.com/yndd/ndd-runtime v0.5.15
 	github.com/yndd/ndd-yang v0.2.8
 	github.com/yndd/nddp-system v0.2.4
 	github.com/yndd/registrator v0.0.19

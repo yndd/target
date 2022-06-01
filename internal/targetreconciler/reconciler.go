@@ -23,8 +23,9 @@ import (
 	gnmictarget "github.com/karimra/gnmic/target"
 	"github.com/karimra/gnmic/types"
 	"github.com/pkg/errors"
-	"github.com/yndd/target/internal/cache"
 	"github.com/yndd/ndd-runtime/pkg/logging"
+	"github.com/yndd/ndd-runtime/pkg/meta"
+	"github.com/yndd/target/internal/cache"
 	"github.com/yndd/target/pkg/cachename"
 	"github.com/yndd/target/pkg/target"
 	"google.golang.org/grpc"
@@ -94,7 +95,7 @@ func New(t *types.TargetConfig, namespace string, opts ...Option) (Reconciler, e
 	for _, opt := range opts {
 		opt(r)
 	}
-	r.nsTargetName = cachename.GetNamespacedName(namespace, r.gnmicTarget.Config.Name)
+	r.nsTargetName = meta.GetNamespacedName(namespace, r.gnmicTarget.Config.Name)
 	r.targetName = r.gnmicTarget.Config.Name
 
 	r.gnmicTarget = gnmictarget.NewTarget(t)
@@ -150,7 +151,7 @@ func (r *reconciler) run() error {
 	timeout := make(chan bool, 1)
 	timeout <- true
 
-	systemCacheNsTargetName := cachename.NamespacedName(r.nsTargetName).GetPrefixNamespacedName(cachename.SystemCachePrefix)
+	systemCacheNsTargetName := meta.NamespacedName(r.nsTargetName).GetPrefixNamespacedName(cachename.SystemCachePrefix)
 	ce, err := r.cache.GetEntry(systemCacheNsTargetName)
 	if err != nil {
 		return err

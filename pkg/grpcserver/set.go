@@ -27,6 +27,7 @@ import (
 	"github.com/yndd/target/pkg/cachename"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"github.com/yndd/ndd-runtime/pkg/meta"
 )
 
 func (s *GrpcServerImpl) Set(ctx context.Context, req *gnmi.SetRequest) (*gnmi.SetResponse, error) {
@@ -38,7 +39,7 @@ func (s *GrpcServerImpl) Set(ctx context.Context, req *gnmi.SetRequest) (*gnmi.S
 	defer s.unaryRPCsem.Release(1)
 
 	prefix := req.GetPrefix()
-	cacheNsTargetName := cachename.NamespacedName(prefix.GetTarget()).GetPrefixNamespacedName(prefix.GetOrigin())
+	cacheNsTargetName := meta.NamespacedName(prefix.GetTarget()).GetPrefixNamespacedName(prefix.GetOrigin())
 
 	numUpdates := len(req.GetUpdate())
 	numReplaces := len(req.GetReplace())
