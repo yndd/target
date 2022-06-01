@@ -26,8 +26,8 @@ import (
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/ndd-runtime/pkg/meta"
 	"github.com/yndd/ndd-runtime/pkg/resource"
+	"github.com/yndd/ndd-runtime/pkg/targetchannel"
 	targetv1 "github.com/yndd/target/apis/target/v1"
-	"github.com/yndd/target/internal/targetchannel"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -96,13 +96,6 @@ type Reconciler struct {
 // A ReconcilerOption configures a Reconciler.
 type ReconcilerOption func(*Reconciler)
 
-// WithTargetAddress specifies the address of the gnmi server within the operator
-func WithAddress(a string) ReconcilerOption {
-	return func(r *Reconciler) {
-		r.address = a
-	}
-}
-
 // WithExpectedVendorType specifies the vendorType the reconciler cares about
 func WithExpectedVendorType(t targetv1.VendorType) ReconcilerOption {
 	return func(r *Reconciler) {
@@ -153,9 +146,9 @@ func WithTargetChannel(tc chan targetchannel.TargetMsg) ReconcilerOption {
 
 // NewReconciler returns a Reconciler that reconciles target resources
 func NewReconciler(m manager.Manager, o ...ReconcilerOption) *Reconciler {
-	
+
 	r := &Reconciler{
-		client: m.GetClient(),
+		client:       m.GetClient(),
 		pollInterval: defaultpollInterval,
 		timeout:      reconcileTimeout,
 		log:          logging.NewNopLogger(),

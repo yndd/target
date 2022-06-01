@@ -29,7 +29,7 @@ import (
 
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/target/internal/cache"
-	"github.com/yndd/target/internal/targetchannel"
+	"github.com/yndd/ndd-runtime/pkg/targetchannel"
 	"golang.org/x/sync/semaphore"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"

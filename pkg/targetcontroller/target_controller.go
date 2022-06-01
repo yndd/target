@@ -28,18 +28,18 @@ import (
 	pkgmetav1 "github.com/yndd/ndd-core/apis/pkg/meta/v1"
 	pkgv1 "github.com/yndd/ndd-core/apis/pkg/v1"
 	"github.com/yndd/ndd-runtime/pkg/logging"
+	"github.com/yndd/ndd-runtime/pkg/meta"
 	"github.com/yndd/ndd-runtime/pkg/model"
 	"github.com/yndd/ndd-runtime/pkg/resource"
+	"github.com/yndd/ndd-runtime/pkg/targetchannel"
 	"github.com/yndd/nddp-system/pkg/ygotnddp"
 	"github.com/yndd/registrator/registrator"
 	"github.com/yndd/target/internal/cache"
-	"github.com/yndd/target/internal/targetchannel"
 	"github.com/yndd/target/pkg/cachename"
 	"github.com/yndd/target/pkg/grpcserver"
 	"github.com/yndd/target/pkg/target"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/event"
-	"github.com/yndd/ndd-runtime/pkg/meta"
 )
 
 const (
