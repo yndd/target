@@ -153,39 +153,9 @@ func WithTargetChannel(tc chan targetchannel.TargetMsg) ReconcilerOption {
 
 // NewReconciler returns a Reconciler that reconciles target resources
 func NewReconciler(m manager.Manager, o ...ReconcilerOption) *Reconciler {
-	/*
-		tg := func() targetv1.Tg {
-			return resource.MustCreateObject(schema.GroupVersionKind(targetv1.TargetGroupVersionKind), m.GetScheme()).(targetv1.Tg)
-		}
-	*/
-
-	// Panic early if we've been asked to reconcile a resource kind that has not
-	// been registered with our controller manager's scheme.
-	//_ = tg()
-
-	/*
-		tfm := &model.Model{
-			StructRootType:  reflect.TypeOf((*ygotnddtarget.Device)(nil)),
-			SchemaTreeRoot:  ygotnddtarget.SchemaTree["Device"],
-			JsonUnmarshaler: ygotnddtarget.Unmarshal,
-			EnumData:        ygotnddtarget.ΛEnum,
-		}
-	*/
-
-	/*
-		tm := &model.Model{
-			StructRootType:  reflect.TypeOf((*ygotnddtarget.NddTarget_TargetEntry)(nil)),
-			SchemaTreeRoot:  ygotnddtarget.SchemaTree["NddTarget_TargetEntry"],
-			JsonUnmarshaler: ygotnddtarget.Unmarshal,
-			EnumData:        ygotnddtarget.ΛEnum,
-		}
-	*/
-
+	
 	r := &Reconciler{
 		client: m.GetClient(),
-		//newTarget: tg,
-		//fm:           tfm,
-		//m:            tm,
 		pollInterval: defaultpollInterval,
 		timeout:      reconcileTimeout,
 		log:          logging.NewNopLogger(),
@@ -197,14 +167,6 @@ func NewReconciler(m manager.Manager, o ...ReconcilerOption) *Reconciler {
 		ro(r)
 	}
 
-	/*
-		r.gnmiConnector = &connector{
-			log: r.log,
-			m:   tm,
-			//fm:          tfm,
-			newClientFn: target.NewTarget,
-		}
-	*/
 	return r
 }
 
@@ -243,7 +205,7 @@ func (r *Reconciler) Reconcile(_ context.Context, req reconcile.Request) (reconc
 			// if the spec is no longer related to the vendor we want to remove the discovery information
 			if t.Status.DiscoveryInfo != nil && t.Status.DiscoveryInfo.VendorType == r.expectedVendorType {
 				t.SetConditions(nddv1.Unknown())
-				t.SetDiscoveryInfo(nil)
+				//t.SetDiscoveryInfo(nil)
 				return reconcile.Result{Requeue: true}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
 			}
 			// stop the reconcile process as we should not be processing this cr; the vendor type is not expected
@@ -284,11 +246,11 @@ func (r *Reconciler) Reconcile(_ context.Context, req reconcile.Request) (reconc
 	if err := r.finalizer.AddFinalizer(ctx, t); err != nil {
 		log.Debug("Cannot add finalizer", "error", err)
 		t.SetConditions(nddv1.ReconcileError(err), nddv1.Unavailable())
-		t.SetDiscoveryInfo(nil)
+		//t.SetDiscoveryInfo(nil)
 		return reconcile.Result{Requeue: true}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)
 	}
 
-	// stop/delete target
+	// create/start target
 	r.targetCh <- targetchannel.TargetMsg{
 		Target:    req.NamespacedName.String(),
 		Operation: targetchannel.Start,

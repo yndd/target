@@ -91,13 +91,13 @@ type DiscoveryInfo struct {
 	Platform string `json:"platform,omitempty"`
 
 	// SW version of the target
-	SwVersion *string `json:"swVersion,omitempty"`
+	SwVersion string `json:"swVersion,omitempty"`
 
 	// the Mac address of the target
-	MacAddress *string `json:"macAddress,omitempty"`
+	MacAddress string `json:"macAddress,omitempty"`
 
 	// the Serial Number of the target
-	SerialNumber *string `json:"serialNumber,omitempty"`
+	SerialNumber string `json:"serialNumber,omitempty"`
 
 	// Supported Encodings of the target
 	SupportedEncodings []string `json:"supportedEncodings,omitempty"`
