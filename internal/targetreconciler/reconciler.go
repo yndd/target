@@ -23,10 +23,10 @@ import (
 	gnmictarget "github.com/karimra/gnmic/target"
 	"github.com/karimra/gnmic/types"
 	"github.com/pkg/errors"
+	"github.com/yndd/cache/pkg/cache"
+	"github.com/yndd/cache/pkg/origin"
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/ndd-runtime/pkg/meta"
-	"github.com/yndd/target/internal/cache"
-	"github.com/yndd/target/pkg/origin"
 	"github.com/yndd/target/pkg/target"
 	"google.golang.org/grpc"
 )

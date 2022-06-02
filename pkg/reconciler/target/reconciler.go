@@ -56,20 +56,20 @@ const (
 	errHasOtherFinalizer = "cannot get other finalizer"
 
 	//event
-	reasonSync          event.Reason = "SyncTarget"
-	reasonCannotConnect event.Reason = "CannotConnectToConnector"
-	reasonCannotObserve event.Reason = "CannotObserveExternalResource"
-	reasonCannotCreate  event.Reason = "CannotCreateExternalResource"
-	reasonCannotDelete  event.Reason = "CannotDeleteExternalResource"
-	reasonDeleted       event.Reason = "DeletedExternalResource"
-	reasonCreated       event.Reason = "CreatedExternalResource"
+	//reasonSync          event.Reason = "SyncTarget"
+	//reasonCannotConnect event.Reason = "CannotConnectToConnector"
+	//reasonCannotObserve event.Reason = "CannotObserveExternalResource"
+	//reasonCannotCreate  event.Reason = "CannotCreateExternalResource"
+	//reasonCannotDelete  event.Reason = "CannotDeleteExternalResource"
+	//reasonDeleted       event.Reason = "DeletedExternalResource"
+	//reasonCreated       event.Reason = "CreatedExternalResource"
 )
 
 // A Reconciler reconciles target resources by creating and managing the
 // lifecycle of a target
 type Reconciler struct {
 	// config info
-	address            string
+	//address            string
 	expectedVendorType targetv1.VendorType
 	//newTarget          func() targetv1.Tg
 	targetCh chan targetchannel.TargetMsg

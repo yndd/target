@@ -26,10 +26,10 @@ import (
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/ndd-runtime/pkg/targetchannel"
 	"github.com/yndd/registrator/registrator"
-	"github.com/yndd/target/internal/cache"
-	"github.com/yndd/target/pkg/configgnmihandler"
-	"github.com/yndd/target/pkg/healthhandler"
-	"github.com/yndd/target/pkg/origin"
+	"github.com/yndd/cache/pkg/cache"
+	"github.com/yndd/grpchandlers/pkg/configgnmihandler"
+	"github.com/yndd/grpchandlers/pkg/healthhandler"
+	"github.com/yndd/cache/pkg/origin"
 )
 
 type TargetController interface {

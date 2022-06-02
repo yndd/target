@@ -21,10 +21,10 @@ import (
 
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/openconfig/ygot/ygot"
+	"github.com/yndd/cache/pkg/origin"
+	"github.com/yndd/cache/pkg/validator"
 	"github.com/yndd/ndd-runtime/pkg/meta"
 	"github.com/yndd/nddp-system/pkg/ygotnddp"
-	"github.com/yndd/target/pkg/origin"
-	"github.com/yndd/target/pkg/validator"
 )
 
 func (r *reconciler) getSpecdata(resource *ygotnddp.NddpSystem_Gvk) (interface{}, error) {

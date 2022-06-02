@@ -26,8 +26,8 @@ import (
 	"github.com/yndd/ndd-yang/pkg/yparser"
 	"github.com/yndd/nddp-system/pkg/gvkresource"
 	"github.com/yndd/nddp-system/pkg/ygotnddp"
-	"github.com/yndd/target/pkg/origin"
-	"github.com/yndd/target/pkg/validator"
+	"github.com/yndd/cache/pkg/origin"
+	"github.com/yndd/cache/pkg/validator"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 )

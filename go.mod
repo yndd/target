@@ -5,17 +5,17 @@ go 1.17
 require (
 	github.com/karimra/gnmic v0.22.1
 	github.com/openconfig/gnmi v0.0.0-20220503232738-6eb133c65a13
-	github.com/openconfig/goyang v1.0.0
-	github.com/openconfig/ygot v0.17.0
+	github.com/openconfig/ygot v0.22.1
 	github.com/pkg/errors v0.9.1
+	github.com/yndd/cache v0.0.1
+	github.com/yndd/grpchandlers v0.0.1
 	github.com/yndd/grpcserver v0.0.1
 	github.com/yndd/ndd-core v0.2.21
 	github.com/yndd/ndd-runtime v0.5.16
 	github.com/yndd/ndd-yang v0.2.8
 	github.com/yndd/nddp-system v0.2.4
 	github.com/yndd/registrator v0.0.19
-	golang.org/x/sync v0.0.0-20220513210516-0976fa681c29
-	google.golang.org/grpc v1.46.0
+	google.golang.org/grpc v1.47.0
 	k8s.io/api v0.24.1
 	k8s.io/apimachinery v0.24.1
 	k8s.io/client-go v0.24.0
@@ -114,6 +114,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
+	github.com/openconfig/goyang v1.0.0 // indirect
 	github.com/pierrec/lz4 v2.6.1+incompatible // indirect
 	github.com/pkg/sftp v1.13.4 // indirect
 	github.com/prometheus/client_golang v1.12.1 // indirect
@@ -137,6 +138,7 @@ require (
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
 	golang.org/x/net v0.0.0-20220516155154-20f960328961 // indirect
 	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5 // indirect
+	golang.org/x/sync v0.0.0-20220513210516-0976fa681c29 // indirect
 	golang.org/x/sys v0.0.0-20220513210249-45d2b4557a2a // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect

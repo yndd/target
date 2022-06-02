@@ -26,7 +26,7 @@ import (
 	"github.com/yndd/ndd-runtime/pkg/meta"
 	"github.com/yndd/ndd-yang/pkg/yparser"
 	"github.com/yndd/nddp-system/pkg/ygotnddp"
-	"github.com/yndd/target/pkg/origin"
+	"github.com/yndd/cache/pkg/origin"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
