@@ -27,6 +27,9 @@ import (
 	"github.com/yndd/target/pkg/origin"
 )
 
+func StartTarget(nsTargetName string) {}
+func StopTarget(nsTargetName string)  {}
+
 func (c *targetControllerImpl) StartTarget(nsTargetName string) {
 	log := c.log.WithValues("nsTargetName", nsTargetName)
 	log.Debug("start target...")
