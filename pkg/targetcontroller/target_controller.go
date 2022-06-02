@@ -19,92 +19,37 @@ package targetcontroller
 import (
 	"context"
 	"os"
-	"sync"
 
-	newgrpcserver "github.com/yndd/grpcserver"
+	"github.com/yndd/grpcserver"
 	pkgmetav1 "github.com/yndd/ndd-core/apis/pkg/meta/v1"
 	pkgv1 "github.com/yndd/ndd-core/apis/pkg/v1"
 	"github.com/yndd/ndd-runtime/pkg/logging"
-	"github.com/yndd/ndd-runtime/pkg/model"
-	"github.com/yndd/ndd-runtime/pkg/resource"
 	"github.com/yndd/ndd-runtime/pkg/targetchannel"
 	"github.com/yndd/registrator/registrator"
-	targetv1 "github.com/yndd/target/apis/target/v1"
 	"github.com/yndd/target/internal/cache"
-	"github.com/yndd/target/pkg/confighandler"
-	"github.com/yndd/target/pkg/grpcserver"
+	"github.com/yndd/target/pkg/configgnmihandler"
+	"github.com/yndd/target/pkg/healthhandler"
 	"github.com/yndd/target/pkg/origin"
-	"github.com/yndd/target/pkg/target"
-	"k8s.io/client-go/rest"
-	"sigs.k8s.io/controller-runtime/pkg/event"
 )
 
-const (
-	// errors
-	errCreateGnmiClient     = "cannot create gnmi client"
-	errTargetInitFailed     = "cannot initialize the target"
-	errTargetiscoveryFailed = "cannot discover target"
-)
-
-// TargetController defines the interfaces for the target controller
 type TargetController interface {
-	//targetinstance methods
-	RegisterStartTargetHandler(h func(nsTargetName string))
-	RegisterStopTargetHandler(h func(nsTargetName string))
-
-	StopTarget(nsTargetName string)
-	// add a target instance to the target controller
-	AddTargetInstance(targetName string, t TargetInstance)
-	// delete a target instance from the target controller
-	DeleteTargetInstance(targetName string) error
-	// get a target instance from the target controller
-	GetTargetInstance(targetName string) TargetInstance
-	// target controller methods
 	// start the target controller
 	Start() error
 	// stop the target controller
 	Stop() error
 	// GetTargetChannel
 	GetTargetChannel() chan targetchannel.TargetMsg
+	// SetStartTargetHandler
+	SetStartTargetHandler(h TargetHandler)
+	// SetStopTargetHandler
+	SetStopTargetHandler(h TargetHandler)
 }
 
 type Options struct {
 	Logger            logging.Logger
 	GrpcServerAddress string
 	Registrator       registrator.Registrator
-	TargetRegistry    target.TargetRegistry
-	TargetModel       *model.Model
-	VendorType        targetv1.VendorType
-}
-
-// targetControllerImpl implements the TargetController interface
-type targetControllerImpl struct {
-	options *Options
-	m       sync.RWMutex
-	targets map[string]TargetInstance
-	cache   cache.Cache
-	//targetRegistry target.TargetRegistry
-	//targetModel *model.Model
-	//grpcServerAddress string
-
-	startTargetHandler TargetHandler
-	stopTargetHandler  TargetHandler
-
-	// channels
-	targetCh chan targetchannel.TargetMsg
-	stopCh   chan bool
-
-	// kubernetes
-	client   resource.ClientApplicator          // used to get the target credentials
-	eventChs map[string]chan event.GenericEvent // TODO to change to a generic gnmi subscription mechanism
-	// server
-	server grpcserver.GrpcServer
-	// registrator
-	registrator registrator.Registrator
-
-	ctx context.Context
-	//cfn context.CancelFunc
-	log logging.Logger
+	Cache             cache.Cache
 }
 
 type TargetHandler func(nsTargetName string)
@@ -112,28 +57,48 @@ type TargetHandler func(nsTargetName string)
 // Option can be used to manipulate Collector config.
 type Option func(TargetController)
 
-// WithLogger specifies how the collector logs messages.
-/*
-func WithStartTargetHandler(h StartTargetHandler) Option {
+func SetStartTargetHandler(h TargetHandler) Option {
 	return func(t TargetController) {
-		t.WithStartTargetHandler(h)
+		t.SetStartTargetHandler(h)
 	}
 }
-*/
 
-func New(ctx context.Context, config *rest.Config, o *Options, opts ...Option) (TargetController, error) {
+func SetStopTargetHandler(h TargetHandler) Option {
+	return func(t TargetController) {
+		t.SetStopTargetHandler(h)
+	}
+}
+
+// targetController implements the TargetController interface
+type targetController struct {
+	options *Options
+	//handlers
+	startTargetHandler TargetHandler
+	stopTargetHandler  TargetHandler
+
+	// channels
+	targetCh chan targetchannel.TargetMsg
+	stopCh   chan bool
+
+	// server
+	server *grpcserver.GrpcServer
+	// registrator
+	registrator registrator.Registrator
+
+	ctx context.Context
+	log logging.Logger
+}
+
+func New(ctx context.Context, o *Options, opts ...Option) (TargetController, error) {
 	log := o.Logger
 	log.Debug("new target controller")
 
-	c := &targetControllerImpl{
+	c := &targetController{
 		log:         o.Logger,
 		options:     o, // contains all options
-		m:           sync.RWMutex{},
-		targets:     make(map[string]TargetInstance),
 		targetCh:    make(chan targetchannel.TargetMsg),
 		stopCh:      make(chan bool),
 		registrator: o.Registrator,
-		cache:       cache.New(), // initialize the multi-device cache
 		ctx:         ctx,
 	}
 
@@ -144,92 +109,56 @@ func New(ctx context.Context, config *rest.Config, o *Options, opts ...Option) (
 	return c, nil
 }
 
-/*
-func (c *targetControllerImpl) WithStartTargetHandler(h StartTargetHandler) {
-	c.startTargetHandler = h
-}
-
-func (c *targetControllerImpl) WithStopTargetHandler(h StopTargetHandler) {
-	c.stopTargetHandler = h
-}
-*/
-
-func (c *targetControllerImpl) RegisterStartTargetHandler(h func(nsTargetName string)) {
-	c.startTargetHandler = h
-}
-
-func (c *targetControllerImpl) RegisterStopTargetHandler(h func(nsTargetName string)) {
-	c.stopTargetHandler = h
-}
-
-func (c *targetControllerImpl) GetTargetChannel() chan targetchannel.TargetMsg {
+func (c *targetController) GetTargetChannel() chan targetchannel.TargetMsg {
 	return c.targetCh
 }
 
-func (c *targetControllerImpl) GetTargetInstance(targetName string) TargetInstance {
-	c.m.Lock()
-	defer c.m.Unlock()
-	t, ok := c.targets[targetName]
-	if !ok {
-		return nil
-	}
-	return t
+func (c *targetController) SetStartTargetHandler(h TargetHandler) {
+	c.startTargetHandler = h
 }
 
-func (c *targetControllerImpl) AddTargetInstance(nsTargetName string, t TargetInstance) {
-	c.m.Lock()
-	defer c.m.Unlock()
-	c.targets[nsTargetName] = t
+func (c *targetController) SetStopTargetHandler(h TargetHandler) {
+	c.stopTargetHandler = h
 }
 
-func (c *targetControllerImpl) DeleteTargetInstance(nsTargetName string) error {
-	c.m.Lock()
-	defer c.m.Unlock()
-	if ti, ok := c.targets[nsTargetName]; ok {
-		if err := ti.StopTargetCollector(); err != nil {
-			return err
-		}
-		if err := ti.StopTargetReconciler(); err != nil {
-			return err
-		}
-		ti.DeRegister()
-	}
-	delete(c.targets, nsTargetName)
-	return nil
-}
-
-func (c *targetControllerImpl) Stop() error {
-	c.log.Debug("stopping  deviceDriver...")
+func (c *targetController) Stop() error {
+	c.log.Debug("stopping target controller...")
 
 	close(c.stopCh)
 	return nil
 }
 
-func (c *targetControllerImpl) Start() error {
-	c.log.Debug("starting targetdriver...")
+func (c *targetController) Start() error {
+	c.log.Debug("starting target controller...")
 
-	ss := confighandler.New(&confighandler.Options{
+	ssc := configgnmihandler.New(&configgnmihandler.Options{
 		Logger: c.log,
-		Cache:  c.cache,
+		Cache:  c.options.Cache,
 	})
 
-	s := newgrpcserver.New(newgrpcserver.Config{
+	ssw := healthhandler.New(&healthhandler.Options{
+		Logger: c.log,
+	})
+
+	c.server = grpcserver.New(grpcserver.Config{
 		Address: c.options.GrpcServerAddress,
 		GNMI:    true,
 		Health:  true,
 	},
-		newgrpcserver.WithLogger(c.log),
-		newgrpcserver.WithGetHandler(origin.Config, ss.Get),
-		newgrpcserver.WithSetUpdateHandler(origin.Config, ss.Set),
-		newgrpcserver.WithSetReplaceHandler(origin.Config, ss.Set),
-		newgrpcserver.WithSetDeleteHandler(origin.Config, ss.Delete),
-		newgrpcserver.WithGetHandler(origin.System, ss.Get),
-		newgrpcserver.WithSetUpdateHandler(origin.System, ss.Set),
-		newgrpcserver.WithSetReplaceHandler(origin.System, ss.Set),
-		newgrpcserver.WithSetDeleteHandler(origin.System, ss.Delete),
+		grpcserver.WithLogger(c.log),
+		grpcserver.WithGetHandler(origin.Config, ssc.Get),
+		grpcserver.WithSetUpdateHandler(origin.Config, ssc.Set),
+		grpcserver.WithSetReplaceHandler(origin.Config, ssc.Set),
+		grpcserver.WithSetDeleteHandler(origin.Config, ssc.Delete),
+		grpcserver.WithGetHandler(origin.System, ssc.Get),
+		grpcserver.WithSetUpdateHandler(origin.System, ssc.Set),
+		grpcserver.WithSetReplaceHandler(origin.System, ssc.Set),
+		grpcserver.WithSetDeleteHandler(origin.System, ssc.Delete),
+		grpcserver.WithWatchHandler(ssw.Watch),
+		grpcserver.WithCheckHandler(ssw.Check),
 	)
 
-	err := s.Start(context.Background())
+	err := c.server.Start(context.Background())
 	if err != nil {
 		return err
 	}
@@ -252,7 +181,7 @@ func (c *targetControllerImpl) Start() error {
 	return nil
 }
 
-func (c *targetControllerImpl) startTargetWorker(ctx context.Context) {
+func (c *targetController) startTargetWorker(ctx context.Context) {
 	c.log.Debug("Starting targetChangeHandler...")
 
 	for {
@@ -267,37 +196,11 @@ func (c *targetControllerImpl) startTargetWorker(ctx context.Context) {
 			//log := c.log.WithValues("targetFullName", t.Target)
 			switch t.Operation {
 			case targetchannel.Start:
+				// call start target handler
 				c.startTargetHandler(t.Target)
-
-				/*
-					if err := c.startTarget(t.Target); err != nil {
-						log.Debug("target init/start failed", "error", err)
-
-						// delete the context since it is not ok to connect to the device
-						if err := c.DeleteTargetInstance(t.Target); err != nil {
-							log.Debug("target delete failed", "error", err)
-						}
-					} else {
-						log.Debug("target init/start success")
-					}
-				*/
 			case targetchannel.Stop:
+				// call stop target handler
 				c.stopTargetHandler(t.Target)
-
-				/*
-					// stop the target and delete the target from the targetlist
-					if err := c.stopTarget(t.Target); err != nil {
-						log.Debug("target stop failed", "error", err)
-						if err := c.DeleteTargetInstance(t.Target); err != nil {
-							log.Debug("target delete failed", "error", err)
-						}
-					} else {
-						c.log.Debug("target stop success")
-						if err := c.DeleteTargetInstance(t.Target); err != nil {
-							c.log.Debug("target delete failed", "error", err)
-						}
-					}
-				*/
 			}
 		}
 	}
