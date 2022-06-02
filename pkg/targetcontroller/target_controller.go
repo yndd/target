@@ -152,11 +152,11 @@ func (c *targetControllerImpl) WithStopTargetHandler(h StopTargetHandler) {
 }
 */
 
-func (c *targetControllerImpl) AddStartTargetHandler(h StartTargetHandler) {
+func (c *targetControllerImpl) RegisterStartTargetHandler(h func(nsTargetName string)) {
 	c.startTargetHandler = h
 }
 
-func (c *targetControllerImpl) AddStopTargetHandler(h StopTargetHandler) {
+func (c *targetControllerImpl) RegisterStopTargetHandler(h func(nsTargetName string)) {
 	c.stopTargetHandler = h
 }
 
