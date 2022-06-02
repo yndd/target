@@ -27,8 +27,9 @@ import (
 	"github.com/yndd/target/pkg/origin"
 )
 
-func StartTarget(nsTargetName string) {}
-func StopTarget(nsTargetName string)  {}
+//var StartTarget = func (c *targetControllerImpl) StartTarget(string) 
+
+var StopTarget = func(nsTargetName string)  {}
 
 func (c *targetControllerImpl) StartTarget(nsTargetName string) {
 	log := c.log.WithValues("nsTargetName", nsTargetName)

@@ -4,10 +4,11 @@ go 1.17
 
 require (
 	github.com/karimra/gnmic v0.22.1
-	github.com/openconfig/gnmi v0.0.0-20220131173555-39aa74195f0d
+	github.com/openconfig/gnmi v0.0.0-20220503232738-6eb133c65a13
 	github.com/openconfig/goyang v1.0.0
 	github.com/openconfig/ygot v0.17.0
 	github.com/pkg/errors v0.9.1
+	github.com/yndd/grpcserver v0.0.1
 	github.com/yndd/ndd-core v0.2.21
 	github.com/yndd/ndd-runtime v0.5.16
 	github.com/yndd/ndd-yang v0.2.8
@@ -18,7 +19,7 @@ require (
 	k8s.io/api v0.24.1
 	k8s.io/apimachinery v0.24.1
 	k8s.io/client-go v0.24.0
-	sigs.k8s.io/controller-runtime v0.11.2
+	sigs.k8s.io/controller-runtime v0.12.1
 )
 
 require (
@@ -152,7 +153,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	inet.af/netaddr v0.0.0-20210903134321-85fa6c94624e // indirect
-	k8s.io/component-base v0.23.5 // indirect
+	k8s.io/component-base v0.24.0 // indirect
 	k8s.io/klog/v2 v2.60.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20220328201542-3ee0da9b0b42 // indirect
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9 // indirect

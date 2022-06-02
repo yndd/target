@@ -21,6 +21,7 @@ import (
 	"os"
 	"sync"
 
+	newgrpcserver "github.com/yndd/grpcserver"
 	pkgmetav1 "github.com/yndd/ndd-core/apis/pkg/meta/v1"
 	pkgv1 "github.com/yndd/ndd-core/apis/pkg/v1"
 	"github.com/yndd/ndd-runtime/pkg/logging"
@@ -31,6 +32,7 @@ import (
 	targetv1 "github.com/yndd/target/apis/target/v1"
 	"github.com/yndd/target/internal/cache"
 	"github.com/yndd/target/pkg/grpcserver"
+	"github.com/yndd/target/pkg/origin"
 	"github.com/yndd/target/pkg/target"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -84,8 +86,8 @@ type targetControllerImpl struct {
 	//targetModel *model.Model
 	//grpcServerAddress string
 
-	startTargetHandler StartTargetHandler
-	stopTargetHandler  StopTargetHandler
+	startTargetHandler TargetHandler
+	stopTargetHandler  TargetHandler
 
 	// channels
 	targetCh chan targetchannel.TargetMsg
@@ -104,8 +106,7 @@ type targetControllerImpl struct {
 	log logging.Logger
 }
 
-type StartTargetHandler func(nsTargetName string)
-type StopTargetHandler func(nsTargetName string)
+type TargetHandler func(nsTargetName string)
 
 // Option can be used to manipulate Collector config.
 type Option func(TargetController)
@@ -206,6 +207,20 @@ func (c *targetControllerImpl) Stop() error {
 func (c *targetControllerImpl) Start() error {
 	c.log.Debug("starting targetdriver...")
 
+	s := newgrpcserver.New(newgrpcserver.Config{
+		Address: c.options.GrpcServerAddress,
+		GNMI:    true,
+		Health:  true,
+	},
+		newgrpcserver.WithLogger(c.log),
+		newgrpcserver.WithGetHandler(origin.Config)
+	)
+
+	err := s.Start(context.Background())
+	if err != nil {
+		return err
+	}
+
 	// start grpc server
 	c.server = grpcserver.New(c.options.GrpcServerAddress,
 		grpcserver.WithHealth(true),
@@ -254,33 +269,33 @@ func (c *targetControllerImpl) startTargetWorker(ctx context.Context) {
 				c.startTargetHandler(t.Target)
 
 				/*
-				if err := c.startTarget(t.Target); err != nil {
-					log.Debug("target init/start failed", "error", err)
+					if err := c.startTarget(t.Target); err != nil {
+						log.Debug("target init/start failed", "error", err)
 
-					// delete the context since it is not ok to connect to the device
-					if err := c.DeleteTargetInstance(t.Target); err != nil {
-						log.Debug("target delete failed", "error", err)
+						// delete the context since it is not ok to connect to the device
+						if err := c.DeleteTargetInstance(t.Target); err != nil {
+							log.Debug("target delete failed", "error", err)
+						}
+					} else {
+						log.Debug("target init/start success")
 					}
-				} else {
-					log.Debug("target init/start success")
-				}
 				*/
 			case targetchannel.Stop:
 				c.stopTargetHandler(t.Target)
 
 				/*
-				// stop the target and delete the target from the targetlist
-				if err := c.stopTarget(t.Target); err != nil {
-					log.Debug("target stop failed", "error", err)
-					if err := c.DeleteTargetInstance(t.Target); err != nil {
-						log.Debug("target delete failed", "error", err)
+					// stop the target and delete the target from the targetlist
+					if err := c.stopTarget(t.Target); err != nil {
+						log.Debug("target stop failed", "error", err)
+						if err := c.DeleteTargetInstance(t.Target); err != nil {
+							log.Debug("target delete failed", "error", err)
+						}
+					} else {
+						c.log.Debug("target stop success")
+						if err := c.DeleteTargetInstance(t.Target); err != nil {
+							c.log.Debug("target delete failed", "error", err)
+						}
 					}
-				} else {
-					c.log.Debug("target stop success")
-					if err := c.DeleteTargetInstance(t.Target); err != nil {
-						c.log.Debug("target delete failed", "error", err)
-					}
-				}
 				*/
 			}
 		}
