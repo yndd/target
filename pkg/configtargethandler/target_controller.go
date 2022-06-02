@@ -83,7 +83,7 @@ type configTargetController struct {
 	log logging.Logger
 }
 
-func New(ctx context.Context, config *rest.Config, o *Options, opts ...Option) (ConfigTargetController, error) {
+func New(ctx context.Context, config *rest.Config, o *Options, opts ...Option) ConfigTargetController {
 	log := o.Logger
 	log.Debug("new target controller")
 
@@ -99,7 +99,7 @@ func New(ctx context.Context, config *rest.Config, o *Options, opts ...Option) (
 		opt(c)
 	}
 
-	return c, nil
+	return c
 }
 
 func (c *configTargetController) GetTargetInstance(targetName string) TargetInstance {
