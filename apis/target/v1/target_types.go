@@ -59,11 +59,11 @@ type Encoding string
 
 const (
 	Encoding_Unknown   Encoding = "unknown"
-	Encoding_JSON      Encoding = "json"
-	Encoding_JSON_IETF Encoding = "jsonIETF"
+	Encoding_JSON      Encoding = "JSON"
+	Encoding_JSON_IETF Encoding = "JSON_IETF"
 	Encoding_Bytes     Encoding = "bytes"
 	Encoding_Protobuf  Encoding = "protobuf"
-	Encoding_Ascii     Encoding = "ascii"
+	Encoding_Ascii     Encoding = "ASCII"
 )
 
 type Protocol string
