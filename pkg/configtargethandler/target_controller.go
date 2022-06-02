@@ -24,7 +24,7 @@ import (
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/ndd-runtime/pkg/meta"
-	"github.com/yndd/ndd-runtime/pkg/model"
+	"github.com/yndd/cache/pkg/model"
 	"github.com/yndd/ndd-runtime/pkg/resource"
 	"github.com/yndd/nddp-system/pkg/ygotnddp"
 	"github.com/yndd/registrator/registrator"

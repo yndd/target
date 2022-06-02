@@ -7,11 +7,11 @@ require (
 	github.com/openconfig/gnmi v0.0.0-20220503232738-6eb133c65a13
 	github.com/openconfig/ygot v0.22.1
 	github.com/pkg/errors v0.9.1
-	github.com/yndd/cache v0.0.1
-	github.com/yndd/grpchandlers v0.0.1
+	github.com/yndd/cache v0.0.3
+	github.com/yndd/grpchandlers v0.0.2
 	github.com/yndd/grpcserver v0.0.1
 	github.com/yndd/ndd-core v0.2.21
-	github.com/yndd/ndd-runtime v0.5.16
+	github.com/yndd/ndd-runtime v0.5.18
 	github.com/yndd/ndd-yang v0.2.8
 	github.com/yndd/nddp-system v0.2.4
 	github.com/yndd/registrator v0.0.19
