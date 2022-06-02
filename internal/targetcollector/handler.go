@@ -22,14 +22,14 @@ import (
 
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/pkg/errors"
-	"github.com/yndd/target/pkg/cachename"
-	"github.com/yndd/target/pkg/validator"
+	"github.com/yndd/ndd-runtime/pkg/meta"
 	"github.com/yndd/ndd-yang/pkg/yparser"
 	"github.com/yndd/nddp-system/pkg/gvkresource"
 	"github.com/yndd/nddp-system/pkg/ygotnddp"
+	"github.com/yndd/target/pkg/origin"
+	"github.com/yndd/target/pkg/validator"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
-	"github.com/yndd/ndd-runtime/pkg/meta"
 )
 
 const (
@@ -47,8 +47,8 @@ func (c *collector) handleSubscription(resp *gnmi.SubscribeResponse) error {
 		// check if the target cache exists
 
 		nsTargetName := meta.GetNamespacedName(c.namespace, c.gnmicTarget.Config.Name)
-		configCacheNsTargetName := meta.NamespacedName(nsTargetName).GetPrefixNamespacedName(cachename.ConfigCachePrefix)
-		systemCacheNsTargetName := meta.NamespacedName(nsTargetName).GetPrefixNamespacedName(cachename.SystemCachePrefix)
+		configCacheNsTargetName := meta.NamespacedName(nsTargetName).GetPrefixNamespacedName(origin.Config)
+		systemCacheNsTargetName := meta.NamespacedName(nsTargetName).GetPrefixNamespacedName(origin.System)
 
 		ce, err := c.cache.GetEntry(systemCacheNsTargetName)
 		if err != nil {

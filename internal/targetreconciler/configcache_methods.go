@@ -21,10 +21,10 @@ import (
 
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/openconfig/ygot/ygot"
-	"github.com/yndd/target/pkg/validator"
-	"github.com/yndd/target/pkg/cachename"
-	"github.com/yndd/nddp-system/pkg/ygotnddp"
 	"github.com/yndd/ndd-runtime/pkg/meta"
+	"github.com/yndd/nddp-system/pkg/ygotnddp"
+	"github.com/yndd/target/pkg/origin"
+	"github.com/yndd/target/pkg/validator"
 )
 
 func (r *reconciler) getSpecdata(resource *ygotnddp.NddpSystem_Gvk) (interface{}, error) {
@@ -46,7 +46,7 @@ func (r *reconciler) validateCreate(resource *ygotnddp.NddpSystem_Gvk) (ygot.Val
 		return nil, err
 	}
 
-	configCacheNsTargetName := meta.NamespacedName(r.nsTargetName).GetPrefixNamespacedName(cachename.ConfigCachePrefix)
+	configCacheNsTargetName := meta.NamespacedName(r.nsTargetName).GetPrefixNamespacedName(origin.Config)
 	ce, err := r.cache.GetEntry(configCacheNsTargetName)
 	if err != nil {
 		return nil, err
@@ -57,7 +57,7 @@ func (r *reconciler) validateCreate(resource *ygotnddp.NddpSystem_Gvk) (ygot.Val
 
 // validateDelete deletes the paths from the current config/goStruct and validates the result
 func (r *reconciler) validateDelete(paths []*gnmi.Path) error {
-	configCacheNsTargetName := meta.NamespacedName(r.nsTargetName).GetPrefixNamespacedName(cachename.ConfigCachePrefix)
+	configCacheNsTargetName := meta.NamespacedName(r.nsTargetName).GetPrefixNamespacedName(origin.Config)
 	ce, err := r.cache.GetEntry(configCacheNsTargetName)
 	if err != nil {
 		return err
@@ -68,7 +68,7 @@ func (r *reconciler) validateDelete(paths []*gnmi.Path) error {
 
 // validateUpdate updates the current config/goStruct and validates the result
 func (r *reconciler) validateUpdate(updates []*gnmi.Update, jsonietf bool) error {
-	configCacheNsTargetName := meta.NamespacedName(r.nsTargetName).GetPrefixNamespacedName(cachename.ConfigCachePrefix)
+	configCacheNsTargetName := meta.NamespacedName(r.nsTargetName).GetPrefixNamespacedName(origin.Config)
 	ce, err := r.cache.GetEntry(configCacheNsTargetName)
 	if err != nil {
 		return err

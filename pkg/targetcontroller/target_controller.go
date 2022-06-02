@@ -18,24 +18,18 @@ package targetcontroller
 
 import (
 	"context"
-	"fmt"
 	"os"
-	"reflect"
 	"sync"
 
-	"github.com/openconfig/gnmi/proto/gnmi"
-	"github.com/pkg/errors"
 	pkgmetav1 "github.com/yndd/ndd-core/apis/pkg/meta/v1"
 	pkgv1 "github.com/yndd/ndd-core/apis/pkg/v1"
 	"github.com/yndd/ndd-runtime/pkg/logging"
-	"github.com/yndd/ndd-runtime/pkg/meta"
 	"github.com/yndd/ndd-runtime/pkg/model"
 	"github.com/yndd/ndd-runtime/pkg/resource"
 	"github.com/yndd/ndd-runtime/pkg/targetchannel"
-	"github.com/yndd/nddp-system/pkg/ygotnddp"
 	"github.com/yndd/registrator/registrator"
+	targetv1 "github.com/yndd/target/apis/target/v1"
 	"github.com/yndd/target/internal/cache"
-	"github.com/yndd/target/pkg/cachename"
 	"github.com/yndd/target/pkg/grpcserver"
 	"github.com/yndd/target/pkg/target"
 	"k8s.io/client-go/rest"
@@ -52,6 +46,8 @@ const (
 // TargetController defines the interfaces for the target controller
 type TargetController interface {
 	//targetinstance methods
+	AddStartTargetHandler(StartTargetHandler)
+	AddStopTargetHandler(StopTargetHandler)
 	// add a target instance to the target controller
 	AddTargetInstance(targetName string, t TargetInstance)
 	// delete a target instance from the target controller
@@ -68,15 +64,12 @@ type TargetController interface {
 }
 
 type Options struct {
-	Logger logging.Logger
-	//Scheme          *runtime.Scheme
+	Logger            logging.Logger
 	GrpcServerAddress string
 	Registrator       registrator.Registrator
-	//ServiceDiscovery          pkgmetav1.ServiceDiscoveryType
-	//ServiceDiscoveryNamespace string
-	//ControllerConfigName string
-	TargetRegistry target.TargetRegistry
-	TargetModel    *model.Model
+	TargetRegistry    target.TargetRegistry
+	TargetModel       *model.Model
+	VendorType        targetv1.VendorType
 }
 
 // targetControllerImpl implements the TargetController interface
@@ -87,45 +80,82 @@ type targetControllerImpl struct {
 	cache   cache.Cache
 	//targetRegistry target.TargetRegistry
 	//targetModel *model.Model
-	grpcServerAddress string
+	//grpcServerAddress string
+
+	startTargetHandler StartTargetHandler
+	stopTargetHandler  StopTargetHandler
 
 	// channels
 	targetCh chan targetchannel.TargetMsg
 	stopCh   chan bool
 
 	// kubernetes
-	client   resource.ClientApplicator
-	eventChs map[string]chan event.GenericEvent
+	client   resource.ClientApplicator          // used to get the target credentials
+	eventChs map[string]chan event.GenericEvent // TODO to change to a generic gnmi subscription mechanism
 	// server
 	server grpcserver.GrpcServer
 	// registrator
 	registrator registrator.Registrator
 
 	ctx context.Context
-	cfn context.CancelFunc
+	//cfn context.CancelFunc
 	log logging.Logger
 }
 
-func New(ctx context.Context, config *rest.Config, o *Options) (TargetController, error) {
+type StartTargetHandler func(nsTargetName string)
+type StopTargetHandler func(nsTargetName string)
+
+// Option can be used to manipulate Collector config.
+type Option func(TargetController)
+
+// WithLogger specifies how the collector logs messages.
+/*
+func WithStartTargetHandler(h StartTargetHandler) Option {
+	return func(t TargetController) {
+		t.WithStartTargetHandler(h)
+	}
+}
+*/
+
+func New(ctx context.Context, config *rest.Config, o *Options, opts ...Option) (TargetController, error) {
 	log := o.Logger
 	log.Debug("new target controller")
 
 	c := &targetControllerImpl{
-		log:               o.Logger,
-		options:           o,
-		m:                 sync.RWMutex{},
-		targets:           make(map[string]TargetInstance),
-		targetCh:          make(chan targetchannel.TargetMsg),
-		stopCh:            make(chan bool),
-		registrator:       o.Registrator,
-		grpcServerAddress: o.GrpcServerAddress,
-		ctx:               ctx,
+		log:         o.Logger,
+		options:     o, // contains all options
+		m:           sync.RWMutex{},
+		targets:     make(map[string]TargetInstance),
+		targetCh:    make(chan targetchannel.TargetMsg),
+		stopCh:      make(chan bool),
+		registrator: o.Registrator,
+		cache:       cache.New(), // initialize the multi-device cache
+		ctx:         ctx,
 	}
 
-	// initialize the multi-device cache
-	c.cache = cache.New()
+	for _, opt := range opts {
+		opt(c)
+	}
 
 	return c, nil
+}
+
+/*
+func (c *targetControllerImpl) WithStartTargetHandler(h StartTargetHandler) {
+	c.startTargetHandler = h
+}
+
+func (c *targetControllerImpl) WithStopTargetHandler(h StopTargetHandler) {
+	c.stopTargetHandler = h
+}
+*/
+
+func (c *targetControllerImpl) AddStartTargetHandler(h StartTargetHandler) {
+	c.startTargetHandler = h
+}
+
+func (c *targetControllerImpl) AddStopTargetHandler(h StopTargetHandler) {
+	c.stopTargetHandler = h
 }
 
 func (c *targetControllerImpl) GetTargetChannel() chan targetchannel.TargetMsg {
@@ -161,8 +191,6 @@ func (c *targetControllerImpl) DeleteTargetInstance(nsTargetName string) error {
 		ti.DeRegister()
 	}
 	delete(c.targets, nsTargetName)
-	targetCacheNsTargetName := meta.NamespacedName(nsTargetName).GetPrefixNamespacedName(cachename.TargetCachePrefix)
-	c.cache.DeleteEntry(targetCacheNsTargetName)
 	return nil
 }
 
@@ -177,7 +205,7 @@ func (c *targetControllerImpl) Start() error {
 	c.log.Debug("starting targetdriver...")
 
 	// start grpc server
-	c.server = grpcserver.New(c.grpcServerAddress,
+	c.server = grpcserver.New(c.options.GrpcServerAddress,
 		grpcserver.WithHealth(true),
 		grpcserver.WithGnmi(true),
 		grpcserver.WithCache(c.cache),
@@ -221,6 +249,8 @@ func (c *targetControllerImpl) startTargetWorker(ctx context.Context) {
 			log := c.log.WithValues("targetFullName", t.Target)
 			switch t.Operation {
 			case targetchannel.Start:
+				c.startTargetHandler(t.Target)
+
 				if err := c.startTarget(t.Target); err != nil {
 					log.Debug("target init/start failed", "error", err)
 
@@ -232,6 +262,8 @@ func (c *targetControllerImpl) startTargetWorker(ctx context.Context) {
 					log.Debug("target init/start success")
 				}
 			case targetchannel.Stop:
+				c.stopTargetHandler(t.Target)
+
 				// stop the target and delete the target from the targetlist
 				if err := c.stopTarget(t.Target); err != nil {
 					log.Debug("target stop failed", "error", err)
@@ -247,95 +279,4 @@ func (c *targetControllerImpl) startTargetWorker(ctx context.Context) {
 			}
 		}
 	}
-}
-
-func (c *targetControllerImpl) startTarget(nsTargetName string) error {
-	log := c.log.WithValues("nsTargetName", nsTargetName)
-	log.Debug("start target...")
-	// the target we get on the channel has <namespace.target> semantics
-	targetName := meta.NamespacedName(nsTargetName).GetName()
-	namespace := meta.NamespacedName(nsTargetName).GetNameSpace()
-
-	targetCacheNsTargetName := meta.NamespacedName(nsTargetName).GetPrefixNamespacedName(cachename.TargetCachePrefix)
-	if !c.cache.Exists(targetCacheNsTargetName) {
-		return fmt.Errorf("target cache not initialized: %s", targetCacheNsTargetName)
-	}
-
-	ti, err := NewTargetInstance(c.ctx, namespace, nsTargetName, targetName,
-		WithTargetInstanceCache(c.cache),
-		WithTargetInstanceClient(c.client),
-		WithTargetInstanceLogger(c.log),
-		WithTargetInstanceEventCh(c.eventChs),
-		WithTargetInstanceTargetsRegistry(c.options.TargetRegistry),
-		WithTargetInstanceRegistrator(c.registrator),
-	)
-	if err != nil {
-		return err
-	}
-	c.AddTargetInstance(nsTargetName, ti)
-
-	// get capabilities the device
-	//cap, err := ti.GetCapabilities()
-	//if err != nil {
-	//	return err
-	//}
-	//enc := target.GetSupportedEncodings(cap)
-	// discover the target
-	//if err := ti.Discover(enc); err != nil {
-	//	return err
-	//}
-	// update model data from capabilities to the targetmodel
-	//c.targetModel.ModelData = model.GetModelData(cap.SupportedModels)
-
-	// initialize the config target cache
-	configCacheNsTargetName := meta.NamespacedName(nsTargetName).GetPrefixNamespacedName(cachename.ConfigCachePrefix)
-	cce := cache.NewCacheEntry(configCacheNsTargetName)
-	cce.SetModel(c.options.TargetModel)
-	c.cache.AddEntry(cce)
-
-	// initialize the system target cache
-	systemCacheNsTargetName := meta.NamespacedName(nsTargetName).GetPrefixNamespacedName(cachename.SystemCachePrefix)
-	sce := cache.NewCacheEntry(systemCacheNsTargetName)
-	sce.SetModel(&model.Model{
-		ModelData:       []*gnmi.ModelData{},
-		StructRootType:  reflect.TypeOf((*ygotnddp.Device)(nil)),
-		SchemaTreeRoot:  ygotnddp.SchemaTree["Device"],
-		JsonUnmarshaler: ygotnddp.Unmarshal,
-		EnumData:        ygotnddp.ΛEnum,
-	})
-	c.cache.AddEntry(sce)
-
-	if err := ti.GetInitialTargetConfig(); err != nil {
-		c.log.Debug("initialize target config", "error", err)
-		return errors.Wrap(err, "cannot get or initialize initial config")
-	}
-
-	if err := ti.InitializeSystemConfig(); err != nil {
-		c.log.Debug("initialize system config", "error", err)
-		return errors.Wrap(err, "cannot validate system config")
-	}
-
-	if err := ti.StartTargetReconciler(); err != nil {
-		c.log.Debug("start target reconciler", "error", err)
-		return errors.Wrap(err, "cannot start target reconciler")
-	}
-
-	if err := ti.StartTargetCollector(); err != nil {
-		c.log.Debug("start target collector", "error", err)
-		return errors.Wrap(err, "cannot start target collector")
-	}
-
-	ti.Register()
-
-	return nil
-}
-
-func (c *targetControllerImpl) stopTarget(nsTargetName string) error {
-	// delete the target instance -> stops the collectors, reconciler
-	c.DeleteTargetInstance(nsTargetName)
-
-	// clear the cache from the device
-	targetCacheNsTargetName := meta.NamespacedName(nsTargetName).GetPrefixNamespacedName(cachename.TargetCachePrefix)
-	c.cache.DeleteEntry(targetCacheNsTargetName)
-	return nil
 }

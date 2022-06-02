@@ -30,7 +30,6 @@ import (
 	pkgv1 "github.com/yndd/ndd-core/apis/pkg/v1"
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/ndd-runtime/pkg/meta"
-	"github.com/yndd/ndd-runtime/pkg/model"
 	"github.com/yndd/ndd-runtime/pkg/resource"
 	"github.com/yndd/ndd-runtime/pkg/utils"
 	"github.com/yndd/nddp-system/pkg/ygotnddp"
@@ -39,7 +38,7 @@ import (
 	"github.com/yndd/target/internal/cache"
 	"github.com/yndd/target/internal/targetcollector"
 	"github.com/yndd/target/internal/targetreconciler"
-	"github.com/yndd/target/pkg/cachename"
+	"github.com/yndd/target/pkg/origin"
 	"github.com/yndd/target/pkg/target"
 	"google.golang.org/grpc"
 	corev1 "k8s.io/api/core/v1"
@@ -65,18 +64,6 @@ type TargetInstanceOption func(TargetInstance)
 // TargetInstance defines the interfaces for the target instance
 type TargetInstance interface {
 	// Options
-	// add a logger to the Target Instance
-	WithTargetInstanceLogger(l logging.Logger)
-	// add a k8s client to the Target Instance
-	WithTargetInstanceClient(c resource.ClientApplicator)
-	// add a cache to the Target Instance
-	WithTargetInstanceCache(c cache.Cache)
-	// add an event channel to Target Instance
-	WithTargetInstanceEventCh(eventChs map[string]chan event.GenericEvent)
-	// add the target registry to Target Instance
-	WithTargetInstanceTargetsRegistry(target.TargetRegistry)
-	// add the registrator to Target Instance
-	WithTargetInstanceRegistrator(r registrator.Registrator)
 
 	// Methods
 	// CreateGNMIClient create a gnmi client for the target
@@ -103,50 +90,23 @@ type TargetInstance interface {
 	DeRegister()
 }
 
-// WithTargetInstanceLogger adds a logger to the target instance
-func WithTargetInstanceLogger(l logging.Logger) TargetInstanceOption {
-	return func(o TargetInstance) {
-		o.WithTargetInstanceLogger(l)
-	}
-}
-
-// WithTargetInstanceClient adds a k8s client to the target instance
-func WithTargetInstanceClient(c resource.ClientApplicator) TargetInstanceOption {
-	return func(o TargetInstance) {
-		o.WithTargetInstanceClient(c)
-	}
-}
-
-// WithTargetInstanceCache adds a cache to the target instance
-func WithTargetInstanceCache(c cache.Cache) TargetInstanceOption {
-	return func(s TargetInstance) {
-		s.WithTargetInstanceCache(c)
-	}
-}
-
-// WithTargetInstanceEventCh adds event channels to the target instance
-func WithTargetInstanceEventCh(eventChs map[string]chan event.GenericEvent) TargetInstanceOption {
-	return func(s TargetInstance) {
-		s.WithTargetInstanceEventCh(eventChs)
-	}
-}
-
-// WithTargetInstanceTargetsRegistry adds target registry to the target instance
-func WithTargetInstanceTargetsRegistry(tr target.TargetRegistry) TargetInstanceOption {
-	return func(s TargetInstance) {
-		s.WithTargetInstanceTargetsRegistry(tr)
-	}
-}
-
-func WithTargetInstanceRegistrator(r registrator.Registrator) TargetInstanceOption {
-	return func(s TargetInstance) {
-		s.WithTargetInstanceRegistrator(r)
-	}
+type TiOptions struct {
+	Logger         logging.Logger
+	Namespace      string
+	NsTargetName   string
+	TargetName     string
+	Cache          cache.Cache
+	Client         resource.ClientApplicator
+	EventChs       map[string]chan event.GenericEvent
+	Registrator    registrator.Registrator
+	TargetRegistry target.TargetRegistry
+	VendorType     targetv1.VendorType
+	//TargetModel       *model.Model
 }
 
 type targetInstance struct {
 	// kubernetes
-	client   resource.ClientApplicator
+	client   resource.ClientApplicator // used to get the target credentials
 	eventChs map[string]chan event.GenericEvent
 
 	// tartgetRegistry
@@ -155,18 +115,15 @@ type targetInstance struct {
 	// controller info
 	//controllerName string
 	// target info
-	//newTarget       func() targetv1.Tg
-	nsTargetName    string
-	targetName      string
-	namespace       string
-	gnmicTarget     *gnmictarget.Target
-	paths           []*string
-	cache           cache.Cache
-	target          target.Target // implements specifics for the vendor type, like srl or sros
-	targetModel     *model.Model
-	targetFullModel *model.Model
-	collector       targetcollector.Collector
-	reconciler      targetreconciler.Reconciler
+	nsTargetName string
+	targetName   string
+	namespace    string
+	gnmicTarget  *gnmictarget.Target
+	paths        []*string
+	cache        cache.Cache
+	target       target.Target // implements specifics for the vendor type, like srl or sros
+	collector    targetcollector.Collector
+	reconciler   targetreconciler.Reconciler
 	// dynamic discovered data
 	//discoveryInfo *targetv1.DiscoveryInfo
 	initialConfig interface{}
@@ -180,15 +137,20 @@ type targetInstance struct {
 	log logging.Logger
 }
 
-func NewTargetInstance(ctx context.Context, namespace, nsTargetName, targetName string, opts ...TargetInstanceOption) (TargetInstance, error) {
+func NewTargetInstance(ctx context.Context, o *TiOptions, opts ...TargetInstanceOption) (TargetInstance, error) {
 	//tg := func() targetv1.Tg { return &targetv1.Target{} }
 
 	ti := &targetInstance{
-		nsTargetName: nsTargetName,
-		targetName:   targetName,
-		namespace:    namespace,
-		paths:        []*string{utils.StringPtr("/")},
-		stopCh:       make(chan struct{}),
+		nsTargetName:   o.NsTargetName,
+		targetName:     o.TargetName,
+		namespace:      o.Namespace,
+		cache:          o.Cache,
+		client:         o.Client,
+		eventChs:       o.EventChs,
+		registrator:    o.Registrator,
+		targetRegistry: o.TargetRegistry,
+		paths:          []*string{utils.StringPtr("/")},
+		stopCh:         make(chan struct{}),
 		//newTarget:    tg,
 	}
 
@@ -205,7 +167,7 @@ func NewTargetInstance(ctx context.Context, namespace, nsTargetName, targetName 
 
 	// initialize the target which implements the specific gnmi calls for this vendor target type
 	var err error
-	ti.target, err = ti.targetRegistry.Initialize(targetv1.VendorTypeNokiaSRL)
+	ti.target, err = ti.targetRegistry.Initialize(o.VendorType)
 	if err != nil {
 		return nil, err
 	}
@@ -219,30 +181,6 @@ func NewTargetInstance(ctx context.Context, namespace, nsTargetName, targetName 
 	return ti, nil
 }
 
-func (ti *targetInstance) WithTargetInstanceLogger(l logging.Logger) {
-	ti.log = l
-}
-
-func (ti *targetInstance) WithTargetInstanceClient(c resource.ClientApplicator) {
-	ti.client = c
-}
-
-func (ti *targetInstance) WithTargetInstanceCache(c cache.Cache) {
-	ti.cache = c
-}
-
-func (ti *targetInstance) WithTargetInstanceEventCh(eventChs map[string]chan event.GenericEvent) {
-	ti.eventChs = eventChs
-}
-
-func (ti *targetInstance) WithTargetInstanceTargetsRegistry(tr target.TargetRegistry) {
-	ti.targetRegistry = tr
-}
-
-func (ti *targetInstance) WithTargetInstanceRegistrator(r registrator.Registrator) {
-	ti.registrator = r
-}
-
 func (ti *targetInstance) CreateGNMIClient() error {
 	targetConfig, err := ti.getTargetConfig()
 	if err != nil {
@@ -254,36 +192,6 @@ func (ti *targetInstance) CreateGNMIClient() error {
 	}
 	return nil
 }
-
-/*
-func (ti *targetInstance) GetCapabilities() (*gnmi.CapabilityResponse, error) {
-	//log := ti.log.WithValues("nsTargetName", ti.nsTargetName)
-	return ti.target.GNMICap(ti.ctx)
-}
-*/
-
-/*
-func (ti *targetInstance) GetRunningConfig() error {
-	log := ti.log.WithValues("nsTargetName", ti.nsTargetName)
-	log.Debug("GetRunningConfig...")
-	// get device details through gnmi
-	var err error
-
-	// query the target cache
-	targetCacheNsTargetName := cachename.NamespacedName(ti.nsTargetName).GetPrefixNamespacedName(cachename.TargetCachePrefix)
-	ce, err := ti.cache.GetEntry(targetCacheNsTargetName)
-	if err != nil {
-		return err
-	}
-	targetCacheEntry, ok := ce.GetRunningConfig().(*ygotnddtarget.NddTarget_TargetEntry)
-	if !ok {
-		return errors.New("unexpected Object")
-	}
-
-	ce.SetRunningConfig(targetCacheEntry)
-	return nil
-}
-*/
 
 func (ti *targetInstance) GetInitialTargetConfig() error {
 	log := ti.log.WithValues("nsTargetName", ti.nsTargetName)
@@ -301,7 +209,7 @@ func (ti *targetInstance) GetInitialTargetConfig() error {
 	}
 
 	//fmt.Println(string(config))
-	configCacheNsTargetName := meta.NamespacedName(ti.nsTargetName).GetPrefixNamespacedName(cachename.ConfigCachePrefix)
+	configCacheNsTargetName := meta.NamespacedName(ti.nsTargetName).GetPrefixNamespacedName(origin.Config)
 	ce, err := ti.cache.GetEntry(configCacheNsTargetName)
 	if err != nil {
 		log.Debug("Get Device data from cache", "error", err)
@@ -320,7 +228,7 @@ func (ti *targetInstance) GetInitialTargetConfig() error {
 
 func (ti *targetInstance) InitializeSystemConfig() error {
 	log := ti.log.WithValues("nsTargetName", ti.nsTargetName)
-	systemCacheNsTargetName := meta.NamespacedName(ti.nsTargetName).GetPrefixNamespacedName(cachename.SystemCachePrefix)
+	systemCacheNsTargetName := meta.NamespacedName(ti.nsTargetName).GetPrefixNamespacedName(origin.System)
 
 	nddpData := &ygotnddp.Device{
 		Cache: &ygotnddp.NddpSystem_Cache{

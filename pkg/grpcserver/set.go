@@ -23,7 +23,6 @@ import (
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/yndd/ndd-runtime/pkg/meta"
 	"github.com/yndd/ndd-yang/pkg/yparser"
-	"github.com/yndd/target/pkg/origin"
 	"github.com/yndd/target/pkg/validator"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -44,10 +43,8 @@ func (s *GrpcServerImpl) Set(ctx context.Context, req *gnmi.SetRequest) (*gnmi.S
 	numReplaces := len(req.GetReplace())
 	numDeletes := len(req.GetDelete())
 	if numUpdates+numReplaces+numDeletes == 0 {
-		// for origin == target cache updates we can have an empty path
-		if prefix.GetOrigin() != origin.Target {
-			return nil, status.Errorf(codes.InvalidArgument, errMissingPathsInGNMISet)
-		}
+		return nil, status.Errorf(codes.InvalidArgument, errMissingPathsInGNMISet)
+
 	}
 
 	log := s.log.WithValues(
@@ -66,21 +63,8 @@ func (s *GrpcServerImpl) Set(ctx context.Context, req *gnmi.SetRequest) (*gnmi.S
 	if numReplaces > 0 {
 		log.Debug("Set Replace", "Path", yparser.GnmiPath2XPath(req.GetReplace()[0].GetPath(), true))
 
-		if prefix.GetOrigin() == cachename.TargetCachePrefix {
-			// for target configs we have to create the entry
-			v, err := yparser.GetValue(req.GetReplace()[0].GetVal())
-			if err != nil {
-				return nil, status.Errorf(codes.Internal, err.Error())
-			}
-			newGoStruct, err := validator.ValidateCreate(ce, v)
-			if err != nil {
-				return nil, status.Errorf(codes.Internal, err.Error())
-			}
-			ce.SetRunningConfig(newGoStruct)
-		} else {
-			if err := validator.ValidateUpdate(ce, req.GetReplace(), true, false, validator.Origin_GnmiServer); err != nil {
-				return nil, status.Errorf(codes.Internal, err.Error())
-			}
+		if err := validator.ValidateUpdate(ce, req.GetReplace(), true, false, validator.Origin_GnmiServer); err != nil {
+			return nil, status.Errorf(codes.Internal, err.Error())
 		}
 
 	}
