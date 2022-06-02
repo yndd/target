@@ -89,7 +89,7 @@ type targetController struct {
 	log logging.Logger
 }
 
-func New(ctx context.Context, o *Options, opts ...Option) (TargetController, error) {
+func New(ctx context.Context, o *Options, opts ...Option) TargetController {
 	log := o.Logger
 	log.Debug("new target controller")
 
@@ -106,7 +106,7 @@ func New(ctx context.Context, o *Options, opts ...Option) (TargetController, err
 		opt(c)
 	}
 
-	return c, nil
+	return c
 }
 
 func (c *targetController) GetTargetChannel() chan targetchannel.TargetMsg {
