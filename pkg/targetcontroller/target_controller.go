@@ -48,6 +48,8 @@ type TargetController interface {
 	//targetinstance methods
 	AddStartTargetHandler(StartTargetHandler)
 	AddStopTargetHandler(StopTargetHandler)
+	StartTarget(nsTargetName string)
+	StopTarget(nsTargetName string)
 	// add a target instance to the target controller
 	AddTargetInstance(targetName string, t TargetInstance)
 	// delete a target instance from the target controller

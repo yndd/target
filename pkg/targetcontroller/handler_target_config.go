@@ -28,7 +28,7 @@ import (
 	"github.com/yndd/target/pkg/origin"
 )
 
-func (c *targetControllerImpl) startTarget(nsTargetName string) error {
+func (c *targetControllerImpl) StartTarget(nsTargetName string) error {
 	log := c.log.WithValues("nsTargetName", nsTargetName)
 	log.Debug("start target...")
 	// the target we get on the channel has <namespace.target> semantics
@@ -96,7 +96,7 @@ func (c *targetControllerImpl) startTarget(nsTargetName string) error {
 	return nil
 }
 
-func (c *targetControllerImpl) stopTarget(nsTargetName string) error {
+func (c *targetControllerImpl) StopTarget(nsTargetName string) error {
 	// delete the target instance -> stops the collectors, reconciler
 	c.DeleteTargetInstance(nsTargetName)
 
