@@ -213,7 +213,7 @@ func (c *targetControllerImpl) Start() error {
 		Health:  true,
 	},
 		newgrpcserver.WithLogger(c.log),
-		newgrpcserver.WithGetHandler(origin.Config)
+		newgrpcserver.WithGetHandler(origin.Config, nil),
 	)
 
 	err := s.Start(context.Background())

@@ -101,10 +101,21 @@ spec:
                       credentialName:
                         type: string
                       encoding:
+                        enum:
+                        - unknown
+                        - JSON
+                        - JSON_IETF
+                        - bytes
+                        - protobuf
+                        - ASCII
                         type: string
                       insecure:
                         type: boolean
                       protocol:
+                        enum:
+                        - unknown
+                        - gnmi
+                        - netconf
                         type: string
                       proxy:
                         type: string
@@ -114,6 +125,10 @@ spec:
                         type: string
                     type: object
                   vendorType:
+                    enum:
+                    - unknown
+                    - nokiaSRL
+                    - nokiaSROS
                     type: string
                 type: object
             type: object

@@ -39,6 +39,7 @@ type TargetStatus struct {
 
 // TargetProperties define the properties of the Target
 type TargetProperties struct {
+	//+kubebuilder:validation:Enum=unknown;nokiaSRL;nokiaSROS;
 	VendorType VendorType             `json:"vendorType,omitempty"`
 	Config     *TargetConfig          `json:"config,omitempty"`
 	Allocation map[string]*Allocation `json:"allocation,omitempty"`
@@ -47,8 +48,10 @@ type TargetProperties struct {
 type TargetConfig struct {
 	Address           string   `json:"address,omitempty"`
 	CredentialName    string   `json:"credentialName,omitempty"`
+	//+kubebuilder:validation:Enum=unknown;JSON;JSON_IETF;bytes;protobuf;ASCII;
 	Encoding          Encoding `json:"encoding,omitempty"`
 	Insecure          bool     `json:"insecure,omitempty"`
+	//+kubebuilder:validation:Enum=unknown;gnmi;netconf;
 	Protocol          Protocol `json:"protocol,omitempty"`
 	Proxy             string   `json:"proxy,omitempty"`
 	SkipVerify        bool     `json:"skipVerify,omitempty"`
