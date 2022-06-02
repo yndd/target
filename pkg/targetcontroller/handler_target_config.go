@@ -20,7 +20,6 @@ import (
 	"reflect"
 
 	"github.com/openconfig/gnmi/proto/gnmi"
-	"github.com/pkg/errors"
 	"github.com/yndd/ndd-runtime/pkg/meta"
 	"github.com/yndd/ndd-runtime/pkg/model"
 	"github.com/yndd/nddp-system/pkg/ygotnddp"
@@ -28,7 +27,7 @@ import (
 	"github.com/yndd/target/pkg/origin"
 )
 
-func (c *targetControllerImpl) StartTarget(nsTargetName string) error {
+func (c *targetControllerImpl) StartTarget(nsTargetName string) {
 	log := c.log.WithValues("nsTargetName", nsTargetName)
 	log.Debug("start target...")
 	// the target we get on the channel has <namespace.target> semantics
@@ -48,10 +47,9 @@ func (c *targetControllerImpl) StartTarget(nsTargetName string) error {
 		VendorType:     c.options.VendorType,
 	})
 	if err != nil {
-		return err
+		//return err
 	}
 	c.AddTargetInstance(nsTargetName, ti)
-
 
 	// initialize the config target cache
 	configCacheNsTargetName := meta.NamespacedName(nsTargetName).GetPrefixNamespacedName(origin.Config)
@@ -73,32 +71,32 @@ func (c *targetControllerImpl) StartTarget(nsTargetName string) error {
 
 	if err := ti.GetInitialTargetConfig(); err != nil {
 		c.log.Debug("initialize target config", "error", err)
-		return errors.Wrap(err, "cannot get or initialize initial config")
+		//return errors.Wrap(err, "cannot get or initialize initial config")
 	}
 
 	if err := ti.InitializeSystemConfig(); err != nil {
 		c.log.Debug("initialize system config", "error", err)
-		return errors.Wrap(err, "cannot validate system config")
+		//return errors.Wrap(err, "cannot validate system config")
 	}
 
 	if err := ti.StartTargetReconciler(); err != nil {
 		c.log.Debug("start target reconciler", "error", err)
-		return errors.Wrap(err, "cannot start target reconciler")
+		//return errors.Wrap(err, "cannot start target reconciler")
 	}
 
 	if err := ti.StartTargetCollector(); err != nil {
 		c.log.Debug("start target collector", "error", err)
-		return errors.Wrap(err, "cannot start target collector")
+		//return errors.Wrap(err, "cannot start target collector")
 	}
 
 	ti.Register()
 
-	return nil
+	//return nil
 }
 
-func (c *targetControllerImpl) StopTarget(nsTargetName string) error {
+func (c *targetControllerImpl) StopTarget(nsTargetName string) {
 	// delete the target instance -> stops the collectors, reconciler
 	c.DeleteTargetInstance(nsTargetName)
 
-	return nil
+	//return nil
 }

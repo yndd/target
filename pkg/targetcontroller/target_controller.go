@@ -46,9 +46,9 @@ const (
 // TargetController defines the interfaces for the target controller
 type TargetController interface {
 	//targetinstance methods
-	AddStartTargetHandler(StartTargetHandler)
-	AddStopTargetHandler(StopTargetHandler)
-	StartTarget(nsTargetName string)
+	RegisterStartTargetHandler(h func(nsTargetName string))
+	RegisterStopTargetHandler(h func(nsTargetName string))
+
 	StopTarget(nsTargetName string)
 	// add a target instance to the target controller
 	AddTargetInstance(targetName string, t TargetInstance)
@@ -248,11 +248,12 @@ func (c *targetControllerImpl) startTargetWorker(ctx context.Context) {
 			c.log.Debug("target controller worker stopped")
 			return
 		case t := <-c.targetCh:
-			log := c.log.WithValues("targetFullName", t.Target)
+			//log := c.log.WithValues("targetFullName", t.Target)
 			switch t.Operation {
 			case targetchannel.Start:
 				c.startTargetHandler(t.Target)
 
+				/*
 				if err := c.startTarget(t.Target); err != nil {
 					log.Debug("target init/start failed", "error", err)
 
@@ -263,9 +264,11 @@ func (c *targetControllerImpl) startTargetWorker(ctx context.Context) {
 				} else {
 					log.Debug("target init/start success")
 				}
+				*/
 			case targetchannel.Stop:
 				c.stopTargetHandler(t.Target)
 
+				/*
 				// stop the target and delete the target from the targetlist
 				if err := c.stopTarget(t.Target); err != nil {
 					log.Debug("target stop failed", "error", err)
@@ -278,6 +281,7 @@ func (c *targetControllerImpl) startTargetWorker(ctx context.Context) {
 						c.log.Debug("target delete failed", "error", err)
 					}
 				}
+				*/
 			}
 		}
 	}
