@@ -31,6 +31,7 @@ import (
 	"github.com/yndd/registrator/registrator"
 	targetv1 "github.com/yndd/target/apis/target/v1"
 	"github.com/yndd/target/internal/cache"
+	"github.com/yndd/target/pkg/confighandler"
 	"github.com/yndd/target/pkg/grpcserver"
 	"github.com/yndd/target/pkg/origin"
 	"github.com/yndd/target/pkg/target"
@@ -207,29 +208,29 @@ func (c *targetControllerImpl) Stop() error {
 func (c *targetControllerImpl) Start() error {
 	c.log.Debug("starting targetdriver...")
 
+	ss := confighandler.New(&confighandler.Options{
+		Logger: c.log,
+		Cache:  c.cache,
+	})
+
 	s := newgrpcserver.New(newgrpcserver.Config{
 		Address: c.options.GrpcServerAddress,
 		GNMI:    true,
 		Health:  true,
 	},
 		newgrpcserver.WithLogger(c.log),
-		newgrpcserver.WithGetHandler(origin.Config, nil),
+		newgrpcserver.WithGetHandler(origin.Config, ss.Get),
+		newgrpcserver.WithSetUpdateHandler(origin.Config, ss.Set),
+		newgrpcserver.WithSetReplaceHandler(origin.Config, ss.Set),
+		newgrpcserver.WithSetDeleteHandler(origin.Config, ss.Delete),
+		newgrpcserver.WithGetHandler(origin.System, ss.Get),
+		newgrpcserver.WithSetUpdateHandler(origin.System, ss.Set),
+		newgrpcserver.WithSetReplaceHandler(origin.System, ss.Set),
+		newgrpcserver.WithSetDeleteHandler(origin.System, ss.Delete),
 	)
 
 	err := s.Start(context.Background())
 	if err != nil {
-		return err
-	}
-
-	// start grpc server
-	c.server = grpcserver.New(c.options.GrpcServerAddress,
-		grpcserver.WithHealth(true),
-		grpcserver.WithGnmi(true),
-		grpcserver.WithCache(c.cache),
-		grpcserver.WithLogger(c.log),
-		grpcserver.WithTargetChannel(c.targetCh),
-	)
-	if err := c.server.Start(); err != nil {
 		return err
 	}
 

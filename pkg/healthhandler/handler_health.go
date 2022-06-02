@@ -1,31 +1,28 @@
-/*
-Copyright 2021 NDDO.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
-package grpcserver
+package healthhandler
 
 import (
 	"context"
+	"sync"
 
+	"github.com/yndd/ndd-runtime/pkg/logging"
 	"google.golang.org/grpc/codes"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/status"
 )
 
+func New() *subServer {
+	return &subServer{}
+}
+
+type subServer struct {
+	log       logging.Logger
+	mu        sync.RWMutex
+	statusMap map[string]healthpb.HealthCheckResponse_ServingStatus
+	updates   map[string]map[healthpb.Health_WatchServer]chan healthpb.HealthCheckResponse_ServingStatus
+}
+
 // Check implements `service Health`.
-func (s *GrpcServerImpl) Check(ctx context.Context, in *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {
+func (s *subServer) Check(ctx context.Context, in *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {
 	s.log.Debug("grpc server health check", "service", in.Service)
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -39,7 +36,7 @@ func (s *GrpcServerImpl) Check(ctx context.Context, in *healthpb.HealthCheckRequ
 }
 
 // Watch implements `service Health`.
-func (s *GrpcServerImpl) Watch(in *healthpb.HealthCheckRequest, stream healthpb.Health_WatchServer) error {
+func (s *subServer) Watch(in *healthpb.HealthCheckRequest, stream healthpb.Health_WatchServer) error {
 	s.log.Debug("grpc server health watch", "service", in.Service)
 
 	//service := in.Service

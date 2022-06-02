@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package grpcserver
+package confighandler
 
 import (
 	"github.com/openconfig/gnmi/proto/gnmi"

@@ -52,6 +52,7 @@ func (c *targetControllerImpl) StartTarget(nsTargetName string) {
 	})
 	if err != nil {
 		//return err
+		log.Debug("create new target instance failed", "error", err)
 	}
 	c.AddTargetInstance(nsTargetName, ti)
 

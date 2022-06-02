@@ -1,20 +1,4 @@
-/*
-Copyright 2021 NDDO.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
-package grpcserver
+package confighandler
 
 import (
 	"context"
@@ -34,21 +18,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (s *GrpcServerImpl) Get(ctx context.Context, req *gnmi.GetRequest) (*gnmi.GetResponse, error) {
-	ok := s.unaryRPCsem.TryAcquire(1)
-	if !ok {
-		return nil, status.Errorf(codes.ResourceExhausted, "max number of Unary RPC reached")
-	}
-	defer s.unaryRPCsem.Release(1)
-
-	// We dont act upon the error here, but we pass it on the response with updates
-	ns, err := s.HandleGet(req)
-	return &gnmi.GetResponse{
-		Notification: ns,
-	}, err
-}
-
-func (s *GrpcServerImpl) HandleGet(req *gnmi.GetRequest) ([]*gnmi.Notification, error) {
+func (s *subServer) Get(ctx context.Context, req *gnmi.GetRequest) (*gnmi.GetResponse, error) {
 	prefix := req.GetPrefix()
 	log := s.log.WithValues("origin", prefix.GetOrigin(), "target", prefix.GetTarget())
 	log.Debug("Get...", "path", req.GetPath())
@@ -64,7 +34,13 @@ func (s *GrpcServerImpl) HandleGet(req *gnmi.GetRequest) ([]*gnmi.Notification, 
 	model := ce.GetModel()
 	ts := time.Now().UnixNano()
 
-	return populateNotification(goStruct, req, model, ts, prefix)
+	ns, err := populateNotification(goStruct, req, model, ts, prefix)
+	if err != nil {
+		return nil, err
+	}
+	return &gnmi.GetResponse{
+		Notification: ns,
+	}, err
 }
 
 func populateNotification(goStruct ygot.ValidatedGoStruct, req *gnmi.GetRequest, model *model.Model, ts int64, prefix *gnmi.Path) ([]*gnmi.Notification, error) {
