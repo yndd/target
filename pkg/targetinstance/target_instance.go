@@ -1,20 +1,4 @@
-/*
-Copyright 2021 NDD.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
-package configtargethandler
+package targetinstance
 
 import (
 	"context"
@@ -50,6 +34,7 @@ const (
 	// Timers
 	defaultTimeout = 5 * time.Second
 	// Errors
+	errCreateGnmiClient             = "cannot create gnmi client"
 	errTargetNotRegistered          = "the target type is not registered"
 	errEmptyTargetSecretReference   = "empty target secret reference"
 	errCredentialSecretDoesNotExist = "credential secret does not exist"
@@ -68,6 +53,8 @@ type TargetInstance interface {
 	// Methods
 	// CreateGNMIClient create a gnmi client for the target
 	CreateGNMIClient() error
+	// Init Target initializes the vendor specific gnmi calls
+	InitTarget() error
 	// GetCapabilities retrieves the capabilities of the target
 	//GetCapabilities() (*gnmi.CapabilityResponse, error)
 	// GetRunningConfig retrieves the target running config
@@ -91,13 +78,13 @@ type TargetInstance interface {
 }
 
 type TiOptions struct {
-	Logger         logging.Logger
-	Namespace      string
-	NsTargetName   string
-	TargetName     string
-	Cache          cache.Cache
-	Client         resource.ClientApplicator
-	EventChs       map[string]chan event.GenericEvent
+	Logger       logging.Logger
+	Namespace    string
+	NsTargetName string
+	TargetName   string
+	Cache        cache.Cache
+	Client       resource.ClientApplicator
+	//EventChs       map[string]chan event.GenericEvent
 	Registrator    registrator.Registrator
 	TargetRegistry target.TargetRegistry
 	VendorType     targetv1.VendorType
@@ -109,8 +96,9 @@ type targetInstance struct {
 	client   resource.ClientApplicator // used to get the target credentials
 	eventChs map[string]chan event.GenericEvent
 
-	// tartgetRegistry
+	// tartgetRegistry implements the target/vendorType specific gnmi calls
 	targetRegistry target.TargetRegistry
+	vendorType     targetv1.VendorType
 
 	// controller info
 	//controllerName string
@@ -141,13 +129,14 @@ func NewTargetInstance(ctx context.Context, o *TiOptions, opts ...TargetInstance
 	//tg := func() targetv1.Tg { return &targetv1.Target{} }
 
 	ti := &targetInstance{
-		nsTargetName:   o.NsTargetName,
-		targetName:     o.TargetName,
-		namespace:      o.Namespace,
-		cache:          o.Cache,
-		client:         o.Client,
-		eventChs:       o.EventChs,
+		nsTargetName: o.NsTargetName,
+		targetName:   o.TargetName,
+		namespace:    o.Namespace,
+		cache:        o.Cache,
+		client:       o.Client,
+		//eventChs:       o.EventChs,
 		registrator:    o.Registrator,
+		vendorType:     o.VendorType,
 		targetRegistry: o.TargetRegistry,
 		paths:          []*string{utils.StringPtr("/")},
 		stopCh:         make(chan struct{}),
@@ -165,20 +154,22 @@ func NewTargetInstance(ctx context.Context, o *TiOptions, opts ...TargetInstance
 		return nil, err
 	}
 
+	return ti, nil
+}
+
+func (ti *targetInstance) InitTarget() error {
 	// initialize the target which implements the specific gnmi calls for this vendor target type
 	var err error
 	ti.target, err = ti.targetRegistry.Initialize(o.VendorType)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if err := ti.target.Init(
 		target.WithLogging(ti.log.WithValues("target", ti.targetName)),
 		target.WithTarget(ti.gnmicTarget),
 	); err != nil {
-		return nil, err
+		return err
 	}
-
-	return ti, nil
 }
 
 func (ti *targetInstance) CreateGNMIClient() error {

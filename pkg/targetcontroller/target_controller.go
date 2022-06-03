@@ -20,16 +20,13 @@ import (
 	"context"
 	"os"
 
+	"github.com/yndd/cache/pkg/cache"
 	"github.com/yndd/grpcserver"
 	pkgmetav1 "github.com/yndd/ndd-core/apis/pkg/meta/v1"
 	pkgv1 "github.com/yndd/ndd-core/apis/pkg/v1"
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/ndd-runtime/pkg/targetchannel"
 	"github.com/yndd/registrator/registrator"
-	"github.com/yndd/cache/pkg/cache"
-	"github.com/yndd/grpchandlers/pkg/configgnmihandler"
-	"github.com/yndd/grpchandlers/pkg/healthhandler"
-	"github.com/yndd/cache/pkg/origin"
 )
 
 type TargetController interface {
@@ -46,10 +43,10 @@ type TargetController interface {
 }
 
 type Options struct {
-	Logger            logging.Logger
-	GrpcServerAddress string
-	Registrator       registrator.Registrator
-	Cache             cache.Cache
+	Logger      logging.Logger
+	GrpcServer  *grpcserver.GrpcServer
+	Registrator registrator.Registrator
+	Cache       cache.Cache
 }
 
 type TargetHandler func(nsTargetName string)
@@ -131,34 +128,7 @@ func (c *targetController) Stop() error {
 func (c *targetController) Start() error {
 	c.log.Debug("starting target controller...")
 
-	ssc := configgnmihandler.New(&configgnmihandler.Options{
-		Logger: c.log,
-		Cache:  c.options.Cache,
-	})
-
-	ssw := healthhandler.New(&healthhandler.Options{
-		Logger: c.log,
-	})
-
-	c.server = grpcserver.New(grpcserver.Config{
-		Address: c.options.GrpcServerAddress,
-		GNMI:    true,
-		Health:  true,
-	},
-		grpcserver.WithLogger(c.log),
-		grpcserver.WithGetHandler(origin.Config, ssc.Get),
-		grpcserver.WithSetUpdateHandler(origin.Config, ssc.Set),
-		grpcserver.WithSetReplaceHandler(origin.Config, ssc.Set),
-		grpcserver.WithSetDeleteHandler(origin.Config, ssc.Delete),
-		grpcserver.WithGetHandler(origin.System, ssc.Get),
-		grpcserver.WithSetUpdateHandler(origin.System, ssc.Set),
-		grpcserver.WithSetReplaceHandler(origin.System, ssc.Set),
-		grpcserver.WithSetDeleteHandler(origin.System, ssc.Delete),
-		grpcserver.WithWatchHandler(ssw.Watch),
-		grpcserver.WithCheckHandler(ssw.Check),
-	)
-
-	err := c.server.Start(context.Background())
+	err := c.options.GrpcServer.Start(context.Background())
 	if err != nil {
 		return err
 	}

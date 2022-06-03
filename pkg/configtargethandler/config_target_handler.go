@@ -22,25 +22,19 @@ import (
 	"sync"
 
 	"github.com/openconfig/gnmi/proto/gnmi"
+	"github.com/yndd/cache/pkg/cache"
+	"github.com/yndd/cache/pkg/model"
+	"github.com/yndd/cache/pkg/origin"
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/ndd-runtime/pkg/meta"
-	"github.com/yndd/cache/pkg/model"
 	"github.com/yndd/ndd-runtime/pkg/resource"
 	"github.com/yndd/nddp-system/pkg/ygotnddp"
 	"github.com/yndd/registrator/registrator"
 	targetv1 "github.com/yndd/target/apis/target/v1"
-	"github.com/yndd/cache/pkg/cache"
-	"github.com/yndd/cache/pkg/origin"
 	"github.com/yndd/target/pkg/target"
+	"github.com/yndd/target/pkg/targetinstance"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/event"
-)
-
-const (
-	// errors
-	errCreateGnmiClient     = "cannot create gnmi client"
-	errTargetInitFailed     = "cannot initialize the target"
-	errTargetiscoveryFailed = "cannot discover target"
 )
 
 // ConfigTargetController defines the interfaces for the target configuration controller
@@ -50,11 +44,11 @@ type ConfigTargetController interface {
 	// stops the target instance
 	StopTarget(nsTargetName string)
 	// add a target instance to the target configuration controller
-	AddTargetInstance(targetName string, t TargetInstance)
+	//AddTargetInstance(targetName string, t targetinstance.TargetInstance)
 	// delete a target instance from the target configuration controller
-	DeleteTargetInstance(targetName string) error
+	//DeleteTargetInstance(targetName string) error
 	// get a target instance from the target configuration controller
-	GetTargetInstance(targetName string) TargetInstance
+	//GetTargetInstance(targetName string) targetinstance.TargetInstance
 }
 
 type Options struct {
@@ -73,7 +67,7 @@ type Option func(ConfigTargetController)
 type configTargetController struct {
 	options *Options
 	m       sync.RWMutex
-	targets map[string]TargetInstance
+	targets map[string]targetinstance.TargetInstance
 
 	// kubernetes
 	client   resource.ClientApplicator          // used to get the target credentials
@@ -85,13 +79,13 @@ type configTargetController struct {
 
 func New(ctx context.Context, config *rest.Config, o *Options, opts ...Option) ConfigTargetController {
 	log := o.Logger
-	log.Debug("new target controller")
+	log.Debug("new target config controller")
 
 	c := &configTargetController{
 		log:     o.Logger,
 		options: o, // contains all options
 		m:       sync.RWMutex{},
-		targets: make(map[string]TargetInstance),
+		targets: make(map[string]targetinstance.TargetInstance),
 		ctx:     ctx,
 	}
 
@@ -102,7 +96,8 @@ func New(ctx context.Context, config *rest.Config, o *Options, opts ...Option) C
 	return c
 }
 
-func (c *configTargetController) GetTargetInstance(targetName string) TargetInstance {
+// get a target instance from the target configuration controller
+func (c *configTargetController) getTargetInstance(targetName string) targetinstance.TargetInstance {
 	c.m.Lock()
 	defer c.m.Unlock()
 	t, ok := c.targets[targetName]
@@ -112,13 +107,15 @@ func (c *configTargetController) GetTargetInstance(targetName string) TargetInst
 	return t
 }
 
-func (c *configTargetController) AddTargetInstance(nsTargetName string, t TargetInstance) {
+// add a target instance to the target configuration controller
+func (c *configTargetController) addTargetInstance(nsTargetName string, t targetinstance.TargetInstance) {
 	c.m.Lock()
 	defer c.m.Unlock()
 	c.targets[nsTargetName] = t
 }
 
-func (c *configTargetController) DeleteTargetInstance(nsTargetName string) error {
+// delete a target instance from the target configuration controller
+func (c *configTargetController) deleteTargetInstance(nsTargetName string) error {
 	c.m.Lock()
 	defer c.m.Unlock()
 	if ti, ok := c.targets[nsTargetName]; ok {
@@ -141,14 +138,14 @@ func (c *configTargetController) StartTarget(nsTargetName string) {
 	targetName := meta.NamespacedName(nsTargetName).GetName()
 	namespace := meta.NamespacedName(nsTargetName).GetNameSpace()
 
-	ti, err := NewTargetInstance(c.ctx, &TiOptions{
-		Logger:         c.log,
-		Namespace:      namespace,
-		NsTargetName:   nsTargetName,
-		TargetName:     targetName,
-		Cache:          c.options.Cache,
-		Client:         c.client,
-		EventChs:       c.eventChs,
+	ti, err := targetinstance.NewTargetInstance(c.ctx, &targetinstance.TiOptions{
+		Logger:       c.log,
+		Namespace:    namespace,
+		NsTargetName: nsTargetName,
+		TargetName:   targetName,
+		Cache:        c.options.Cache,
+		Client:       c.client,
+		//EventChs:       c.eventChs,
 		TargetRegistry: c.options.TargetRegistry,
 		Registrator:    c.options.Registrator,
 		VendorType:     c.options.VendorType,
@@ -157,7 +154,7 @@ func (c *configTargetController) StartTarget(nsTargetName string) {
 		//return err
 		log.Debug("create new target instance failed", "error", err)
 	}
-	c.AddTargetInstance(nsTargetName, ti)
+	c.addTargetInstance(nsTargetName, ti)
 
 	// initialize the config target cache
 	configCacheNsTargetName := meta.NamespacedName(nsTargetName).GetPrefixNamespacedName(origin.Config)
@@ -206,5 +203,5 @@ func (c *configTargetController) StopTarget(nsTargetName string) {
 	log := c.log.WithValues("nsTargetName", nsTargetName)
 	log.Debug("delete target...")
 	// delete the target instance -> stops the collectors, reconciler
-	c.DeleteTargetInstance(nsTargetName)
+	c.deleteTargetInstance(nsTargetName)
 }
