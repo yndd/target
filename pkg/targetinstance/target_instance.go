@@ -51,6 +51,7 @@ type TargetInstance interface {
 	// Options
 
 	// Methods
+	GetTargetConfig() (*types.TargetConfig, error)
 	// CreateGNMIClient create a gnmi client for the target
 	CreateGNMIClient() error
 	// Init Target initializes the vendor specific gnmi calls
@@ -167,7 +168,7 @@ func (ti *targetInstance) InitTarget() error {
 }
 
 func (ti *targetInstance) CreateGNMIClient() error {
-	targetConfig, err := ti.getTargetConfig()
+	targetConfig, err := ti.GetTargetConfig()
 	if err != nil {
 		return err
 	}
@@ -297,7 +298,7 @@ func (ti *targetInstance) StopTargetCollector() error {
 	return nil
 }
 
-func (ti *targetInstance) getTargetConfig() (*types.TargetConfig, error) {
+func (ti *targetInstance) GetTargetConfig() (*types.TargetConfig, error) {
 	log := ti.log.WithValues("nsTargetName", ti.nsTargetName)
 	//t := ti.newTarget()
 	t := &targetv1.Target{}
