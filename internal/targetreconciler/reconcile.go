@@ -41,10 +41,10 @@ func (r *reconciler) handlePendingResources() error {
 	// get the list of Managed Resources (MR)
 	resourceList := ce.GetSystemConfigMap()
 
-	pendingResources := map[ygotnddp.E_NddpSystem_ResourceAction]*ygotnddp.NddpSystem_Gvk{}
+	pendingResources := map[ygotnddp.E_YnddSystem_ResourceAction]*ygotnddp.YnddSystem_Gvk{}
 	// loop over all resource and check if work is required on them
 	for _, resource := range resourceList {
-		if resource.Status == ygotnddp.NddpSystem_ResourceStatus_PENDING {
+		if resource.Status == ygotnddp.YnddSystem_ResourceStatus_PENDING {
 			if pendingResource, ok := pendingResources[resource.Action]; !ok {
 				// no resource is pending for this action so far
 				pendingResources[resource.Action] = resource
@@ -71,7 +71,7 @@ func (r *reconciler) handlePendingResources() error {
 	}
 	// execute the action to the target and update the status
 	// first do update, after delete and lastly create
-	if resource, ok := pendingResources[ygotnddp.NddpSystem_ResourceAction_UPDATE]; ok {
+	if resource, ok := pendingResources[ygotnddp.YnddSystem_ResourceAction_UPDATE]; ok {
 
 		if r != nil {
 			reconcileErr := r.reconcileUpdate(r.ctx, resource)
@@ -80,7 +80,7 @@ func (r *reconciler) handlePendingResources() error {
 			}
 		}
 	}
-	if resource, ok := pendingResources[ygotnddp.NddpSystem_ResourceAction_DELETE]; ok {
+	if resource, ok := pendingResources[ygotnddp.YnddSystem_ResourceAction_DELETE]; ok {
 		if r != nil {
 			reconcileErr := r.reconcileDelete(r.ctx, resource)
 			if err := r.updateResourceStatus(resource, reconcileErr); err != nil {
@@ -97,7 +97,7 @@ func (r *reconciler) handlePendingResources() error {
 		}
 
 	}
-	if resource, ok := pendingResources[ygotnddp.NddpSystem_ResourceAction_CREATE]; ok {
+	if resource, ok := pendingResources[ygotnddp.YnddSystem_ResourceAction_CREATE]; ok {
 		if r != nil {
 			reconcileErr := r.reconcileCreate(r.ctx, resource)
 			if err := r.updateResourceStatus(resource, reconcileErr); err != nil {
@@ -108,7 +108,7 @@ func (r *reconciler) handlePendingResources() error {
 	return nil
 }
 
-func (r *reconciler) updateResourceStatus(resource *ygotnddp.NddpSystem_Gvk, reconcileErr error) error {
+func (r *reconciler) updateResourceStatus(resource *ygotnddp.YnddSystem_Gvk, reconcileErr error) error {
 	log := r.log.WithValues("target", r.gnmicTarget.Config.Name, "address", r.gnmicTarget.Config.Address)
 
 	configCacheNsTargetName := meta.NamespacedName(r.nsTargetName).GetPrefixNamespacedName(origin.Config)
@@ -120,14 +120,14 @@ func (r *reconciler) updateResourceStatus(resource *ygotnddp.NddpSystem_Gvk, rec
 	log.Debug("reconcile updateResourceStatus", "resource", *resource.Name, "err", reconcileErr)
 	if reconcileErr != nil {
 		// transaction failed
-		if err := ce.SetSystemResourceStatus(*resource.Name, reconcileErr.Error(), ygotnddp.NddpSystem_ResourceStatus_FAILED); err != nil {
+		if err := ce.SetSystemResourceStatus(*resource.Name, reconcileErr.Error(), ygotnddp.YnddSystem_ResourceStatus_FAILED); err != nil {
 			return err
 		}
 		log.Debug("reconciler error", "error", reconcileErr)
 		return nil
 	}
 	// transaction succeeded
-	if err := ce.SetSystemResourceStatus(*resource.Name, "", ygotnddp.NddpSystem_ResourceStatus_SUCCESS); err != nil {
+	if err := ce.SetSystemResourceStatus(*resource.Name, "", ygotnddp.YnddSystem_ResourceStatus_SUCCESS); err != nil {
 		return err
 	}
 	if resource, err := ce.GetSystemConfigEntry(*resource.Name); err == nil {
@@ -137,7 +137,7 @@ func (r *reconciler) updateResourceStatus(resource *ygotnddp.NddpSystem_Gvk, rec
 	return nil
 }
 
-func (r *reconciler) reconcileCreate(ctx context.Context, resource *ygotnddp.NddpSystem_Gvk) error {
+func (r *reconciler) reconcileCreate(ctx context.Context, resource *ygotnddp.YnddSystem_Gvk) error {
 	log := r.log.WithValues("target", r.targetName, "address", r.gnmicTarget.Config.Address,
 		"resourceName", *resource.Name, "action", resource.Action, "status", resource.Status, "attempts", *resource.Attempt)
 	log.Debug("reconciled resource config start")
@@ -190,7 +190,7 @@ func (r *reconciler) reconcileCreate(ctx context.Context, resource *ygotnddp.Ndd
 	return nil
 }
 
-func (r *reconciler) reconcileUpdate(ctx context.Context, resource *ygotnddp.NddpSystem_Gvk) error {
+func (r *reconciler) reconcileUpdate(ctx context.Context, resource *ygotnddp.YnddSystem_Gvk) error {
 	log := r.log.WithValues("target", r.targetName, "address", r.gnmicTarget.Config.Address,
 		"resourceName", *resource.Name, "action", resource.Action, "status", resource.Status, "attempts", *resource.Attempt)
 	log.Debug("reconciled resource config start")
@@ -220,7 +220,7 @@ func (r *reconciler) reconcileUpdate(ctx context.Context, resource *ygotnddp.Ndd
 		}
 		updates = append(updates, &gnmi.Update{
 			Path: p,
-			Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonIetfVal{JsonIetfVal: []byte(*u.Val)}},
+			Val:  &gnmi.TypedValue{Value: &gnmi.TypedValue_JsonIetfVal{JsonIetfVal: []byte(*u.Value)}},
 		})
 	}
 
@@ -257,7 +257,7 @@ func (r *reconciler) reconcileUpdate(ctx context.Context, resource *ygotnddp.Ndd
 	return nil
 }
 
-func (r *reconciler) reconcileDelete(ctx context.Context, resource *ygotnddp.NddpSystem_Gvk) error {
+func (r *reconciler) reconcileDelete(ctx context.Context, resource *ygotnddp.YnddSystem_Gvk) error {
 	log := r.log.WithValues("target", r.targetName, "address", r.gnmicTarget.Config.Address,
 		"resourceName", *resource.Name, "action", resource.Action, "status", resource.Status, "attempts", *resource.Attempt)
 	log.Debug("reconciled resource config start")

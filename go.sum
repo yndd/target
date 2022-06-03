@@ -1406,7 +1406,6 @@ github.com/openconfig/grpctunnel v0.0.0-20210610163803-fde4a9dc048d/go.mod h1:x9
 github.com/openconfig/ygot v0.6.0/go.mod h1:o30svNf7O0xK+R35tlx95odkDmZWS9JyWWQSmIhqwAs=
 github.com/openconfig/ygot v0.10.4/go.mod h1:oCQNdXnv7dWc8scTDgoFkauv1wwplJn5HspHcjlxSAQ=
 github.com/openconfig/ygot v0.15.1/go.mod h1:7ZiBFNc4n/1Hkv2v2dAEpxisqDznp0JVpLR13Toe4AY=
-github.com/openconfig/ygot v0.17.0/go.mod h1:7ZiBFNc4n/1Hkv2v2dAEpxisqDznp0JVpLR13Toe4AY=
 github.com/openconfig/ygot v0.22.1 h1:jOpaEuOE1JaLDkDbDTza45YOxhn8ghroK7xxXHt4v0I=
 github.com/openconfig/ygot v0.22.1/go.mod h1:7ZiBFNc4n/1Hkv2v2dAEpxisqDznp0JVpLR13Toe4AY=
 github.com/opencontainers/go-digest v0.0.0-20170106003457-a6d0ee40d420/go.mod h1:cMLVZDEM3+U2I4VmLI6N8jQYUd2OVphdqWwCJHrFt2s=
@@ -1710,10 +1709,8 @@ github.com/xi2/xz v0.0.0-20171230120015-48954b6210f8/go.mod h1:HUYIGzjTL3rfEspMx
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 github.com/xlab/treeprint v0.0.0-20181112141820-a009c3971eca/go.mod h1:ce1O1j6UtZfjr22oyGxGLbauSBp2YVXpARAosm7dHBg=
 github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:aYKd//L2LvnjZzWKhF00oedf4jCCReLcmhLdhm1A27Q=
-github.com/yndd/cache v0.0.3 h1:fsn/VkkcOCqoxB0esQS5StnD+OFCbo2wW6FXhNN8MOE=
-github.com/yndd/cache v0.0.3/go.mod h1:huDvNDRGRl20+jAT3hMBZoNFuqEXMaZ7IwMRjEd+o50=
-github.com/yndd/grpchandlers v0.0.2 h1:TGojA88Be2veWYcDfR2biVitcZEyQeCSqn1yCf0rSRw=
-github.com/yndd/grpchandlers v0.0.2/go.mod h1:0KOjuIVHGNCa6cuWAPf7yLUlh5ejyuvhAcyO5C2tpuE=
+github.com/yndd/cache v0.0.5 h1:LWPUaqJnuFmyIWueLmpBlCdDQokLLMjyBwwf4oOt4M0=
+github.com/yndd/cache v0.0.5/go.mod h1:hG94StQNZxE5HPXgsQbj1K78HCgoWfCHx7o8z9Z3Jag=
 github.com/yndd/grpcserver v0.0.1 h1:hPi5RhuA862F6wlx9K0PHw8j8Zkud3j7PWNVtdEtPx0=
 github.com/yndd/grpcserver v0.0.1/go.mod h1:72LjUJQoX10WJFBmpILFoS+t8H7N7aCA+wMxFeZNTOk=
 github.com/yndd/ndd-core v0.1.6/go.mod h1:zlQTBILqiJlYj3WYy0yHGBBIMZemhVXoNnXE4vhF+pI=
@@ -1727,7 +1724,6 @@ github.com/yndd/ndd-runtime v0.1.6/go.mod h1:Y07uIZQgSqz5h3UeAYp24JyDjugH0T/zeAC
 github.com/yndd/ndd-runtime v0.1.10/go.mod h1:Y07uIZQgSqz5h3UeAYp24JyDjugH0T/zeACjNFVnBes=
 github.com/yndd/ndd-runtime v0.2.24/go.mod h1:1mXKpIPdY80e0LxpGiVMtTWcHuuXIBZEHlpvLRj+6Fs=
 github.com/yndd/ndd-runtime v0.2.51/go.mod h1:1mXKpIPdY80e0LxpGiVMtTWcHuuXIBZEHlpvLRj+6Fs=
-github.com/yndd/ndd-runtime v0.3.0/go.mod h1:vBCpUsDUymCEaYOKOmI0tbpggC9eiU8xlirnT1ZN1Sc=
 github.com/yndd/ndd-runtime v0.5.8/go.mod h1:J9Lqkfh+oCtRBkVYdPPwnIaOnv9CC30tJ6WTyYEcr0Q=
 github.com/yndd/ndd-runtime v0.5.18 h1:DOjnHz+uFlrVd9mU/WMWGvQa+OLs2n5yXjGpuJltgG0=
 github.com/yndd/ndd-runtime v0.5.18/go.mod h1:ZYYOgWm234RRhnNuJEdRNfUBa3FIa2YwyEXMACzE5TU=
@@ -1757,8 +1753,8 @@ github.com/yndd/nddp-srl3 v0.0.1/go.mod h1:lPjUIiSfdBiOjyWsdHbPu9gaLO7D2Q5ROjmw1
 github.com/yndd/nddp-system v0.0.25/go.mod h1:430zJYP2NTxa+wOOC1ANuTMdW6WqRwsgz6n4wqGz5JA=
 github.com/yndd/nddp-system v0.0.30/go.mod h1:5yZZvSmaCcSxag0kK9r1j1Sf7Kh/JS5bq3oeGYaGdbQ=
 github.com/yndd/nddp-system v0.1.6/go.mod h1:de07SAGt/KWH6n3pSRCNt9Ylty1jhSqCmbFtglvvXaI=
-github.com/yndd/nddp-system v0.2.4 h1:9blbr1CkNotklOH2VOAtBEHoWfH+Nep8M2iYPzBYDCQ=
-github.com/yndd/nddp-system v0.2.4/go.mod h1:50STaoaXX7ZHqlChzik+LBjKiVrjQKtLp+71TTEer4s=
+github.com/yndd/nddp-system v0.2.5 h1:cvzFugEB7IHEdbbbsWwpydFmOyff1Q7xdMkEpuRhxgk=
+github.com/yndd/nddp-system v0.2.5/go.mod h1:bBIVHqRlB7kc4bZLN01IAsJJXElgXU5QBW+8hYWTRCs=
 github.com/yndd/nddr-as-registry v0.0.7/go.mod h1:0vg7+8qzSOpgDceLygIYvQ6s3uXh2iV8QEVjs9yn880=
 github.com/yndd/nddr-ipam-registry v0.0.3/go.mod h1:yFXaQkcSNQz0PmLuAVDThROE4x794A66ydXRISRD+dw=
 github.com/yndd/nddr-ni-registry v0.0.6/go.mod h1:ifDc1cw6eOs7RxhERplphnBsaL+Tp2GhbAugNHXNVYY=

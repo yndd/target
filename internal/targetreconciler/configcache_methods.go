@@ -27,7 +27,7 @@ import (
 	"github.com/yndd/nddp-system/pkg/ygotnddp"
 )
 
-func (r *reconciler) getSpecdata(resource *ygotnddp.NddpSystem_Gvk) (interface{}, error) {
+func (r *reconciler) getSpecdata(resource *ygotnddp.YnddSystem_Gvk) (interface{}, error) {
 	spec := resource.Spec
 	//r.log.Debug("getSpecdata", "specdata", *spec)
 	var x1 interface{}
@@ -40,7 +40,7 @@ func (r *reconciler) getSpecdata(resource *ygotnddp.NddpSystem_Gvk) (interface{}
 
 // validateCreate takes the current config/goStruct and merge it with the newGoStruct
 // validate the new GoStruct against the targetSchema and return the newGoStruct
-func (r *reconciler) validateCreate(resource *ygotnddp.NddpSystem_Gvk) (ygot.ValidatedGoStruct, error) {
+func (r *reconciler) validateCreate(resource *ygotnddp.YnddSystem_Gvk) (ygot.ValidatedGoStruct, error) {
 	x, err := r.getSpecdata(resource)
 	if err != nil {
 		return nil, err
