@@ -88,7 +88,7 @@ func (c *collector) handleSubscription(resp *gnmi.SubscribeResponse) error {
 
 // handleDeletes updates the running config to align the target config cache based on the delete information.
 // A reconcile event is triggered to the k8s controller if the delete path matches a managed k8s resource (MR)
-func (c *collector) handleDeletes(configCacheNsTargetName string, resourceNames map[string]struct{}, resourceList map[string]*ygotnddp.NddpSystem_Gvk, delPaths []*gnmi.Path) error {
+func (c *collector) handleDeletes(configCacheNsTargetName string, resourceNames map[string]struct{}, resourceList map[string]*ygotnddp.YnddSystem_Gvk, delPaths []*gnmi.Path) error {
 	if len(delPaths) > 0 {
 		/*
 			for _, p := range delPaths {
@@ -124,7 +124,7 @@ func (c *collector) handleDeletes(configCacheNsTargetName string, resourceNames 
 
 // handleUpdates updates the running config to align the target config cache based on the update information.
 // A reconcile event is triggered to the k8s controller if the update path matches a managed k8s resource (MR)
-func (c *collector) handleUpdates(configCacheNsTargetName string, resourceNames map[string]struct{}, resourceList map[string]*ygotnddp.NddpSystem_Gvk, updates []*gnmi.Update) error {
+func (c *collector) handleUpdates(configCacheNsTargetName string, resourceNames map[string]struct{}, resourceList map[string]*ygotnddp.YnddSystem_Gvk, updates []*gnmi.Update) error {
 	if len(updates) > 0 {
 		/*
 			for _, u := range updates {
@@ -162,7 +162,7 @@ func (c *collector) handleUpdates(configCacheNsTargetName string, resourceNames 
 // findManagedResource returns a the k8s resourceName as a string (using gvk convention [group, version, kind, namespace, name])
 // by validation the best path match in the resourcelist of the system cache
 // if no match is find unmanagedResource is returned, since this path is not managed by the k8s controller
-func (c *collector) findManagedResource(xpath string, resourceList map[string]*ygotnddp.NddpSystem_Gvk) (*string, error) {
+func (c *collector) findManagedResource(xpath string, resourceList map[string]*ygotnddp.YnddSystem_Gvk) (*string, error) {
 	matchedResourceName := unmanagedResource
 	matchedResourcePath := ""
 	for resourceName, r := range resourceList {

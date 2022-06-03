@@ -174,7 +174,7 @@ func (c *configTargetController) StartTarget(nsTargetName string) {
 		ModelData:       []*gnmi.ModelData{},
 		StructRootType:  reflect.TypeOf((*ygotnddp.Device)(nil)),
 		SchemaTreeRoot:  ygotnddp.SchemaTree["Device"],
-		JsonUnmarshaler: ygotnddp.Unmarshal,
+		//JsonUnmarshaler: ygotnddp.Unmarshal,
 		EnumData:        ygotnddp.ΛEnum,
 	})
 	c.options.Cache.AddEntry(sce)
