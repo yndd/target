@@ -22,12 +22,12 @@ import (
 
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/pkg/errors"
+	"github.com/yndd/cache/pkg/origin"
+	"github.com/yndd/cache/pkg/validator"
 	"github.com/yndd/ndd-runtime/pkg/meta"
 	"github.com/yndd/ndd-yang/pkg/yparser"
 	"github.com/yndd/nddp-system/pkg/gvkresource"
 	"github.com/yndd/nddp-system/pkg/ygotnddp"
-	"github.com/yndd/cache/pkg/origin"
-	"github.com/yndd/cache/pkg/validator"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 )

@@ -217,7 +217,7 @@ func (ti *targetInstance) InitializeSystemConfig() error {
 	systemCacheNsTargetName := meta.NamespacedName(ti.nsTargetName).GetPrefixNamespacedName(origin.System)
 
 	nddpData := &ygotnddp.Device{
-		Cache: &ygotnddp.NddpSystem_Cache{
+		Cache: &ygotnddp.YnddSystem_Cache{
 			Update:       ygot.Bool(false),
 			Exhausted:    ygot.Uint32(0),
 			ExhaustedNbr: ygot.Uint64(0),
