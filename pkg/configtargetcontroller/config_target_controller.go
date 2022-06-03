@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package configtargethandler
+package configtargetcontroller
 
 import (
 	"context"
@@ -48,7 +48,7 @@ type ConfigTargetController interface {
 	// delete a target instance from the target configuration controller
 	//DeleteTargetInstance(targetName string) error
 	// get a target instance from the target configuration controller
-	//GetTargetInstance(targetName string) targetinstance.TargetInstance
+	GetTargetInstance(targetName string) targetinstance.TargetInstance
 }
 
 type Options struct {
@@ -97,7 +97,7 @@ func New(ctx context.Context, config *rest.Config, o *Options, opts ...Option) C
 }
 
 // get a target instance from the target configuration controller
-func (c *configTargetController) getTargetInstance(targetName string) targetinstance.TargetInstance {
+func (c *configTargetController) GetTargetInstance(targetName string) targetinstance.TargetInstance {
 	c.m.Lock()
 	defer c.m.Unlock()
 	t, ok := c.targets[targetName]
@@ -138,7 +138,7 @@ func (c *configTargetController) StartTarget(nsTargetName string) {
 	targetName := meta.NamespacedName(nsTargetName).GetName()
 	namespace := meta.NamespacedName(nsTargetName).GetNameSpace()
 
-	ti, err := targetinstance.NewTargetInstance(c.ctx, &targetinstance.TiOptions{
+	ti := targetinstance.NewTargetInstance(c.ctx, &targetinstance.TiOptions{
 		Logger:       c.log,
 		Namespace:    namespace,
 		NsTargetName: nsTargetName,
@@ -150,9 +150,14 @@ func (c *configTargetController) StartTarget(nsTargetName string) {
 		Registrator:    c.options.Registrator,
 		VendorType:     c.options.VendorType,
 	})
-	if err != nil {
-		//return err
-		log.Debug("create new target instance failed", "error", err)
+	// create gnmi client
+	if err := ti.CreateGNMIClient(); err != nil {
+		log.Debug("cannot initialize target, gnmi client cannot get created", "error", err)
+	}
+
+	// initialize the specific vendor gnmi calls
+	if err := ti.InitTarget(); err != nil {
+		log.Debug("cannot initialize target, vendor type not registered", "error", err)
 	}
 	c.addTargetInstance(nsTargetName, ti)
 

@@ -125,9 +125,7 @@ type targetInstance struct {
 	log logging.Logger
 }
 
-func NewTargetInstance(ctx context.Context, o *TiOptions, opts ...TargetInstanceOption) (TargetInstance, error) {
-	//tg := func() targetv1.Tg { return &targetv1.Target{} }
-
+func NewTargetInstance(ctx context.Context, o *TiOptions, opts ...TargetInstanceOption) TargetInstance {
 	ti := &targetInstance{
 		nsTargetName: o.NsTargetName,
 		targetName:   o.TargetName,
@@ -149,18 +147,13 @@ func NewTargetInstance(ctx context.Context, o *TiOptions, opts ...TargetInstance
 
 	ti.ctx, ti.cfn = context.WithCancel(ctx)
 
-	// create gnmi client
-	if err := ti.CreateGNMIClient(); err != nil {
-		return nil, err
-	}
-
-	return ti, nil
+	return ti
 }
 
 func (ti *targetInstance) InitTarget() error {
 	// initialize the target which implements the specific gnmi calls for this vendor target type
 	var err error
-	ti.target, err = ti.targetRegistry.Initialize(o.VendorType)
+	ti.target, err = ti.targetRegistry.Initialize(ti.vendorType)
 	if err != nil {
 		return err
 	}
@@ -170,6 +163,7 @@ func (ti *targetInstance) InitTarget() error {
 	); err != nil {
 		return err
 	}
+	return nil
 }
 
 func (ti *targetInstance) CreateGNMIClient() error {
