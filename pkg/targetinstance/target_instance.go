@@ -128,6 +128,7 @@ type targetInstance struct {
 
 func NewTargetInstance(ctx context.Context, o *TiOptions, opts ...TargetInstanceOption) TargetInstance {
 	ti := &targetInstance{
+		log:          o.Logger,
 		nsTargetName: o.NsTargetName,
 		targetName:   o.TargetName,
 		namespace:    o.Namespace,
