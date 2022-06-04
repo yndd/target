@@ -27,6 +27,7 @@ import (
 	"google.golang.org/grpc"
 	corev1 "k8s.io/api/core/v1"
 	k8stypes "k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 )
 
@@ -84,7 +85,7 @@ type TiOptions struct {
 	NsTargetName string
 	TargetName   string
 	Cache        cache.Cache
-	Client       resource.ClientApplicator
+	Client       client.Client
 	//EventChs       map[string]chan event.GenericEvent
 	Registrator    registrator.Registrator
 	TargetRegistry target.TargetRegistry
@@ -94,7 +95,7 @@ type TiOptions struct {
 
 type targetInstance struct {
 	// kubernetes
-	client   resource.ClientApplicator // used to get the target credentials
+	client   client.Client // used to get the target credentials
 	eventChs map[string]chan event.GenericEvent
 
 	// tartgetRegistry implements the target/vendorType specific gnmi calls
