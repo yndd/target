@@ -321,7 +321,7 @@ func (ti *targetInstance) GetTargetConfig() (*types.TargetConfig, error) {
 	}
 
 	return &types.TargetConfig{
-		Name:       ti.targetName,
+		Name:       strings.Join([]string{ti.namespace, ti.targetName}, "/"),
 		Address:    t.Spec.Properties.Config.Address,
 		Username:   &creds.Username,
 		Password:   &creds.Password,
