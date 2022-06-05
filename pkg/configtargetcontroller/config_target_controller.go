@@ -27,14 +27,13 @@ import (
 	"github.com/yndd/cache/pkg/origin"
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/ndd-runtime/pkg/meta"
-	"github.com/yndd/ndd-runtime/pkg/resource"
 	"github.com/yndd/nddp-system/pkg/ygotnddp"
 	"github.com/yndd/registrator/registrator"
 	targetv1 "github.com/yndd/target/apis/target/v1"
 	"github.com/yndd/target/pkg/target"
 	"github.com/yndd/target/pkg/targetinstance"
 	"k8s.io/client-go/rest"
-	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // ConfigTargetController defines the interfaces for the target configuration controller
@@ -53,6 +52,7 @@ type ConfigTargetController interface {
 
 type Options struct {
 	Logger         logging.Logger
+	Client         client.Client
 	Registrator    registrator.Registrator
 	TargetRegistry target.TargetRegistry
 	TargetModel    *model.Model
@@ -70,8 +70,8 @@ type configTargetController struct {
 	targets map[string]targetinstance.TargetInstance
 
 	// kubernetes
-	client   resource.ClientApplicator          // used to get the target credentials
-	eventChs map[string]chan event.GenericEvent // TODO to change to a generic gnmi subscription mechanism
+	client client.Client // used to get the target credentials
+	//eventChs map[string]chan event.GenericEvent // TODO to change to a generic gnmi subscription mechanism
 
 	ctx context.Context
 	log logging.Logger
@@ -83,6 +83,7 @@ func New(ctx context.Context, config *rest.Config, o *Options, opts ...Option) C
 
 	c := &configTargetController{
 		log:     o.Logger,
+		client:  o.Client,
 		options: o, // contains all options
 		m:       sync.RWMutex{},
 		targets: make(map[string]targetinstance.TargetInstance),
