@@ -32,7 +32,7 @@ import (
 )
 
 func (r *reconciler) handlePendingResources() error {
-	configCacheNsTargetName := meta.NamespacedName(r.gnmicTarget.Config.Name).GetPrefixNamespacedName(origin.Config)
+	configCacheNsTargetName := meta.NamespacedName(r.gnmicTarget.Config.Name).GetPrefixNamespacedName(origin.System)
 	ce, err := r.cache.GetEntry(configCacheNsTargetName)
 	if err != nil {
 		return err
@@ -41,7 +41,7 @@ func (r *reconciler) handlePendingResources() error {
 	// get the list of Managed Resources (MR)
 	resourceList := ce.GetSystemConfigMap()
 
-	r.log.Debug("resourceList", "resourceList", resourceList)
+	r.log.Debug("resourceList", "len", len(resourceList), "resourceList", resourceList)
 
 	pendingResources := map[ygotnddp.E_YnddSystem_ResourceAction]*ygotnddp.YnddSystem_Gvk{}
 	// loop over all resource and check if work is required on them
