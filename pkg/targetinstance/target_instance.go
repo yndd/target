@@ -181,8 +181,6 @@ func (ti *targetInstance) InitTarget() error {
 	return nil
 }
 
-
-
 func (ti *targetInstance) GetInitialTargetConfig() error {
 	log := ti.log.WithValues("nsTargetName", ti.nsTargetName)
 	// get initial config through gnmi
@@ -258,7 +256,7 @@ func (ti *targetInstance) StartTargetReconciler() error {
 	// start per target reconciler
 	var err error
 	ti.reconciler, err = targetreconciler.New(ti.gnmicTarget.Config, ti.namespace,
-		targetreconciler.WithTarget(ti.gnmicTarget),
+		targetreconciler.WithTarget(ti.target),
 		targetreconciler.WithCache(ti.cache),
 		targetreconciler.WithLogger(ti.log),
 	)
