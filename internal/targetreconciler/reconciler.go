@@ -151,9 +151,10 @@ func (r *reconciler) run() error {
 	timeout := make(chan bool, 1)
 	timeout <- true
 
-	systemCacheNsTargetName := meta.NamespacedName(r.nsTargetName).GetPrefixNamespacedName(origin.System)
+	systemCacheNsTargetName := meta.NamespacedName(r.gnmicTarget.Config.Name).GetPrefixNamespacedName(origin.System)
 	ce, err := r.cache.GetEntry(systemCacheNsTargetName)
 	if err != nil {
+		log.Debug("cannot get cache entry", "error", err)
 		return err
 	}
 
