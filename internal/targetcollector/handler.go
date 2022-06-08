@@ -37,7 +37,7 @@ const (
 )
 
 func (c *collector) handleSubscription(resp *gnmi.SubscribeResponse) error {
-	nsTargetName := meta.GetNamespacedName(c.namespace, c.gnmicTarget.Config.Name)
+	nsTargetName := c.gnmicTarget.Config.Name
 	configCacheNsTargetName := meta.NamespacedName(nsTargetName).GetPrefixNamespacedName(origin.Config)
 	systemCacheNsTargetName := meta.NamespacedName(nsTargetName).GetPrefixNamespacedName(origin.System)
 
@@ -57,7 +57,7 @@ func (c *collector) handleSubscription(resp *gnmi.SubscribeResponse) error {
 
 		ce, err := c.cache.GetEntry(systemCacheNsTargetName)
 		if err != nil {
-			log.Debug("handle target update target not found in ygot schema cache")
+			log.Debug("handle target update target not found in ygot schema cache", "error", err)
 			return errors.New("target cache does not exist")
 		}
 
