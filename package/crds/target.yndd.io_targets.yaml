@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.8.0
+    controller-gen.kubebuilder.io/version: v0.9.0
   creationTimestamp: null
   name: targets.target.yndd.io
 spec:
@@ -131,82 +131,83 @@ spec:
                     - nokiaSROS
                     type: string
                 type: object
-            type: object
-          status:
-            description: TargetStatus defines the observed state of TargetNode
-            properties:
-              conditions:
-                description: Conditions of the resource.
-                items:
-                  description: A Condition that may apply to a resource
-                  properties:
-                    kind:
-                      description: Type of this condition. At most one of each condition
-                        type may apply to a resource at any point in time.
-                      type: string
-                    lastTransitionTime:
-                      description: LastTransitionTime is the last time this condition
-                        transitioned from one status to another.
-                      format: date-time
-                      type: string
-                    message:
-                      description: A Message containing details about this condition's
-                        last transition from one status to another, if any.
-                      type: string
-                    reason:
-                      description: A Reason for this condition's last transition from
-                        one status to another.
-                      type: string
-                    status:
-                      description: Status of this condition; is it currently True,
-                        False, or Unknown?
-                      type: string
-                  required:
-                  - kind
-                  - lastTransitionTime
-                  - reason
-                  - status
-                  type: object
-                type: array
-              controllerRef:
-                description: identifies the controller reference of the target
+              status:
+                description: TargetStatus defines the observed state of TargetNode
                 properties:
-                  name:
-                    description: Name of the referenced object.
-                    type: string
-                required:
-                - name
-                type: object
-              discoveryInfo:
-                description: The DiscoveryInfo of the Target
-                properties:
-                  hostname:
-                    description: Host name of the target
-                    type: string
-                  lastSeen:
-                    description: Last discovery time in nanoseconds
-                    format: int64
-                    type: integer
-                  macAddress:
-                    description: the Mac address of the target
-                    type: string
-                  platform:
-                    description: the Kind of the target
-                    type: string
-                  serialNumber:
-                    description: the Serial Number of the target
-                    type: string
-                  supportedEncodings:
-                    description: Supported Encodings of the target
+                  conditions:
+                    description: Conditions of the resource.
                     items:
-                      type: string
+                      description: A Condition that may apply to a resource
+                      properties:
+                        kind:
+                          description: Type of this condition. At most one of each
+                            condition type may apply to a resource at any point in
+                            time.
+                          type: string
+                        lastTransitionTime:
+                          description: LastTransitionTime is the last time this condition
+                            transitioned from one status to another.
+                          format: date-time
+                          type: string
+                        message:
+                          description: A Message containing details about this condition's
+                            last transition from one status to another, if any.
+                          type: string
+                        reason:
+                          description: A Reason for this condition's last transition
+                            from one status to another.
+                          type: string
+                        status:
+                          description: Status of this condition; is it currently True,
+                            False, or Unknown?
+                          type: string
+                      required:
+                      - kind
+                      - lastTransitionTime
+                      - reason
+                      - status
+                      type: object
                     type: array
-                  swVersion:
-                    description: SW version of the target
-                    type: string
-                  vendorType:
-                    description: the VendorType of the target
-                    type: string
+                  controllerRef:
+                    description: identifies the controller reference of the target
+                    properties:
+                      name:
+                        description: Name of the referenced object.
+                        type: string
+                    required:
+                    - name
+                    type: object
+                  discoveryInfo:
+                    description: identifies the operational information of the target
+                    properties:
+                      hostname:
+                        description: Host name of the target
+                        type: string
+                      lastSeen:
+                        description: Last discovery time in nanoseconds
+                        format: int64
+                        type: integer
+                      macAddress:
+                        description: the Mac address of the target
+                        type: string
+                      platform:
+                        description: the Kind of the target
+                        type: string
+                      serialNumber:
+                        description: the Serial Number of the target
+                        type: string
+                      supportedEncodings:
+                        description: Supported Encodings of the target
+                        items:
+                          type: string
+                        type: array
+                      swVersion:
+                        description: SW version of the target
+                        type: string
+                      vendorType:
+                        description: the VendorType of the target
+                        type: string
+                    type: object
                 type: object
             type: object
         type: object
@@ -214,9 +215,3 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []

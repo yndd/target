@@ -25,6 +25,7 @@ import (
 type TargetSpec struct {
 	// Properties define the properties of the Target
 	Properties *TargetProperties `json:"properties,omitempty"`
+	Status     *TargetStatus     `json:"status,omitempty"`
 }
 
 // TargetStatus defines the observed state of TargetNode
@@ -34,7 +35,7 @@ type TargetStatus struct {
 	// identifies the controller reference of the target
 	ControllerRef nddv1.Reference `json:"controllerRef,omitempty"`
 	// identifies the operational information of the target
-	Status `json:",inline"`
+	DiscoveryInfo *DiscoveryInfo `json:"discoveryInfo,omitempty"`
 }
 
 // TargetProperties define the properties of the Target
@@ -46,11 +47,11 @@ type TargetProperties struct {
 }
 
 type TargetConfig struct {
-	Address           string   `json:"address,omitempty"`
-	CredentialName    string   `json:"credentialName,omitempty"`
+	Address        string `json:"address,omitempty"`
+	CredentialName string `json:"credentialName,omitempty"`
 	//+kubebuilder:validation:Enum=unknown;JSON;JSON_IETF;bytes;protobuf;ASCII;
-	Encoding          Encoding `json:"encoding,omitempty"`
-	Insecure          bool     `json:"insecure,omitempty"`
+	Encoding Encoding `json:"encoding,omitempty"`
+	Insecure bool     `json:"insecure,omitempty"`
 	//+kubebuilder:validation:Enum=unknown;gnmi;netconf;
 	Protocol          Protocol `json:"protocol,omitempty"`
 	Proxy             string   `json:"proxy,omitempty"`
@@ -109,14 +110,14 @@ type DiscoveryInfo struct {
 	LastSeen int64 `json:"lastSeen,omitempty"`
 }
 
-// Status defines the observed state of the Target
-type Status struct {
-	// The DiscoveryInfo of the Target
-	DiscoveryInfo *DiscoveryInfo `json:"discoveryInfo,omitempty"`
+// // Status defines the observed state of the Target
+// type Status struct {
+// 	// The DiscoveryInfo of the Target
+// 	DiscoveryInfo *DiscoveryInfo `json:"discoveryInfo,omitempty"`
 
-	// UsedTargetSpec identifies the used target spec when installed
-	// UsedTargetSpec *TargetSpec `json:"usedTargetSpec,omitempty"`
-}
+// 	// UsedTargetSpec identifies the used target spec when installed
+// 	// UsedTargetSpec *TargetSpec `json:"usedTargetSpec,omitempty"`
+// }
 
 // +kubebuilder:object:root=true
 // +genclient
@@ -140,8 +141,7 @@ type Target struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   TargetSpec   `json:"spec,omitempty"`
-	Status TargetStatus `json:"status,omitempty"`
+	Spec TargetSpec `json:"spec,omitempty"`
 }
 
 //+kubebuilder:object:root=true
