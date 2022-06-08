@@ -37,7 +37,14 @@ const (
 )
 
 func (c *collector) handleSubscription(resp *gnmi.SubscribeResponse) error {
-	log := c.log.WithValues("target", c.gnmicTarget.Config.Name, "address", c.gnmicTarget.Config.Address)
+	nsTargetName := meta.GetNamespacedName(c.namespace, c.gnmicTarget.Config.Name)
+	configCacheNsTargetName := meta.NamespacedName(nsTargetName).GetPrefixNamespacedName(origin.Config)
+	systemCacheNsTargetName := meta.NamespacedName(nsTargetName).GetPrefixNamespacedName(origin.System)
+
+	log := c.log.WithValues("address", c.gnmicTarget.Config.Address,
+		"nsTargetName", nsTargetName,
+		"configCacheNsTargetName", configCacheNsTargetName,
+		"systemCacheNsTargetName", systemCacheNsTargetName)
 	//log.Debug("handle target update from target")
 
 	switch resp.GetResponse().(type) {
@@ -46,9 +53,7 @@ func (c *collector) handleSubscription(resp *gnmi.SubscribeResponse) error {
 
 		// check if the target cache exists
 
-		nsTargetName := meta.GetNamespacedName(c.namespace, c.gnmicTarget.Config.Name)
-		configCacheNsTargetName := meta.NamespacedName(nsTargetName).GetPrefixNamespacedName(origin.Config)
-		systemCacheNsTargetName := meta.NamespacedName(nsTargetName).GetPrefixNamespacedName(origin.System)
+		log.Debug("handle target update from target...")
 
 		ce, err := c.cache.GetEntry(systemCacheNsTargetName)
 		if err != nil {
