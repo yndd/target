@@ -20,7 +20,6 @@ import (
 	"context"
 	"time"
 
-	gnmictarget "github.com/karimra/gnmic/target"
 	"github.com/karimra/gnmic/types"
 	"github.com/pkg/errors"
 	"github.com/yndd/cache/pkg/cache"
@@ -44,7 +43,7 @@ type Reconciler interface {
 	Stop() error
 	WithLogger(log logging.Logger)
 	WithCache(c cache.Cache)
-	WithTarget(t *gnmictarget.Target)
+	WithTarget(t target.Target)
 }
 
 // Option can be used to manipulate Options.
@@ -63,7 +62,7 @@ func WithCache(c cache.Cache) Option {
 	}
 }
 
-func WithTarget(t *gnmictarget.Target) Option {
+func WithTarget(t target.Target) Option {
 	return func(r Reconciler) {
 		r.WithTarget(t)
 	}
@@ -74,10 +73,10 @@ type reconciler struct {
 	nsTargetName string
 	targetName   string
 	namespace    string
-	gnmicTarget  *gnmictarget.Target
-	target       target.Target
-	cache        cache.Cache
-	ctx          context.Context
+	//gnmicTarget  *gnmictarget.Target
+	target target.Target
+	cache  cache.Cache
+	ctx    context.Context
 
 	stopCh chan bool // used to stop the child go routines if the target gets deleted
 
@@ -87,15 +86,16 @@ type reconciler struct {
 // NewCollector creates a new GNMI collector
 func New(t *types.TargetConfig, namespace string, opts ...Option) (Reconciler, error) {
 	r := &reconciler{
-		namespace: namespace,
-		stopCh:    make(chan bool),
-		ctx:       context.Background(),
+
+		namespace:    namespace,
+		nsTargetName: meta.GetNamespacedName(namespace, t.Name),
+		targetName:   t.Name,
+		stopCh:       make(chan bool),
+		ctx:          context.Background(),
 	}
 	for _, opt := range opts {
 		opt(r)
 	}
-	r.nsTargetName = r.gnmicTarget.Config.Name
-	r.targetName = r.gnmicTarget.Config.Name
 
 	/*
 		r.gnmicTarget = gnmictarget.NewTarget(t)
@@ -115,13 +115,13 @@ func (r *reconciler) WithCache(tc cache.Cache) {
 	r.cache = tc
 }
 
-func (r *reconciler) WithTarget(t *gnmictarget.Target) {
-	r.gnmicTarget = t
+func (r *reconciler) WithTarget(t target.Target) {
+	r.target = t
 }
 
 // Stop reconciler
 func (r *reconciler) Stop() error {
-	log := r.log.WithValues("target", r.gnmicTarget.Config.Name, "address", r.gnmicTarget.Config.Address)
+	log := r.log.WithValues("target", r.nsTargetName)
 	log.Debug("stop target reconciler...")
 
 	r.stopCh <- true
@@ -131,7 +131,7 @@ func (r *reconciler) Stop() error {
 
 // Start reconciler
 func (r *reconciler) Start() error {
-	log := r.log.WithValues("target", r.gnmicTarget.Config.Name, "address", r.gnmicTarget.Config.Address)
+	log := r.log.WithValues("target", r.nsTargetName)
 	log.Debug("starting target reconciler...")
 
 	errChannel := make(chan error)
@@ -146,13 +146,13 @@ func (r *reconciler) Start() error {
 
 // run reconciler
 func (r *reconciler) run() error {
-	log := r.log.WithValues("target", r.gnmicTarget.Config.Name, "address", r.gnmicTarget.Config.Address)
+	log := r.log.WithValues("target", r.nsTargetName)
 	log.Debug("running target reconciler...")
 
 	timeout := make(chan bool, 1)
 	timeout <- true
 
-	systemCacheNsTargetName := meta.NamespacedName(r.gnmicTarget.Config.Name).GetPrefixNamespacedName(origin.System)
+	systemCacheNsTargetName := meta.NamespacedName(r.nsTargetName).GetPrefixNamespacedName(origin.System)
 	ce, err := r.cache.GetEntry(systemCacheNsTargetName)
 	if err != nil {
 		log.Debug("cannot get cache entry", "error", err)

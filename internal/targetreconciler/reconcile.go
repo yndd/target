@@ -32,7 +32,7 @@ import (
 )
 
 func (r *reconciler) handlePendingResources() error {
-	configCacheNsTargetName := meta.NamespacedName(r.gnmicTarget.Config.Name).GetPrefixNamespacedName(origin.System)
+	configCacheNsTargetName := meta.NamespacedName(r.nsTargetName).GetPrefixNamespacedName(origin.System)
 	ce, err := r.cache.GetEntry(configCacheNsTargetName)
 	if err != nil {
 		return err
@@ -90,7 +90,7 @@ func (r *reconciler) handlePendingResources() error {
 				return err
 			}
 			// delete the resource from the system cache if all succeeded
-			configCacheNsTargetName := meta.NamespacedName(r.gnmicTarget.Config.Name).GetPrefixNamespacedName(origin.Config)
+			configCacheNsTargetName := meta.NamespacedName(r.nsTargetName).GetPrefixNamespacedName(origin.Config)
 			ce, err := r.cache.GetEntry(configCacheNsTargetName)
 			if err != nil {
 				return err
@@ -112,9 +112,9 @@ func (r *reconciler) handlePendingResources() error {
 }
 
 func (r *reconciler) updateResourceStatus(resource *ygotnddp.YnddSystem_Gvk, reconcileErr error) error {
-	log := r.log.WithValues("target", r.gnmicTarget.Config.Name, "address", r.gnmicTarget.Config.Address)
+	log := r.log.WithValues("target", r.nsTargetName)
 
-	configCacheNsTargetName := meta.NamespacedName(r.gnmicTarget.Config.Name).GetPrefixNamespacedName(origin.Config)
+	configCacheNsTargetName := meta.NamespacedName(r.nsTargetName).GetPrefixNamespacedName(origin.Config)
 	ce, err := r.cache.GetEntry(configCacheNsTargetName)
 	if err != nil {
 		return err
@@ -141,11 +141,11 @@ func (r *reconciler) updateResourceStatus(resource *ygotnddp.YnddSystem_Gvk, rec
 }
 
 func (r *reconciler) reconcileCreate(ctx context.Context, resource *ygotnddp.YnddSystem_Gvk) error {
-	log := r.log.WithValues("target", r.targetName, "address", r.gnmicTarget.Config.Address,
+	log := r.log.WithValues("target", r.nsTargetName,
 		"resourceName", *resource.Name, "action", resource.Action, "status", resource.Status, "attempts", *resource.Attempt)
 	log.Debug("reconciled resource config start")
 
-	configCacheNsTargetName := meta.NamespacedName(r.gnmicTarget.Config.Name).GetPrefixNamespacedName(origin.Config)
+	configCacheNsTargetName := meta.NamespacedName(r.nsTargetName).GetPrefixNamespacedName(origin.Config)
 	ce, err := r.cache.GetEntry(configCacheNsTargetName)
 	if err != nil {
 		return err
@@ -194,11 +194,11 @@ func (r *reconciler) reconcileCreate(ctx context.Context, resource *ygotnddp.Ynd
 }
 
 func (r *reconciler) reconcileUpdate(ctx context.Context, resource *ygotnddp.YnddSystem_Gvk) error {
-	log := r.log.WithValues("target", r.targetName, "address", r.gnmicTarget.Config.Address,
+	log := r.log.WithValues("target", r.nsTargetName,
 		"resourceName", *resource.Name, "action", resource.Action, "status", resource.Status, "attempts", *resource.Attempt)
 	log.Debug("reconciled resource config start")
 
-	configCacheNsTargetName := meta.NamespacedName(r.gnmicTarget.Config.Name).GetPrefixNamespacedName(origin.Config)
+	configCacheNsTargetName := meta.NamespacedName(r.nsTargetName).GetPrefixNamespacedName(origin.Config)
 	ce, err := r.cache.GetEntry(configCacheNsTargetName)
 	if err != nil {
 		return err
@@ -261,11 +261,11 @@ func (r *reconciler) reconcileUpdate(ctx context.Context, resource *ygotnddp.Ynd
 }
 
 func (r *reconciler) reconcileDelete(ctx context.Context, resource *ygotnddp.YnddSystem_Gvk) error {
-	log := r.log.WithValues("target", r.targetName, "address", r.gnmicTarget.Config.Address,
+	log := r.log.WithValues("target", r.nsTargetName,
 		"resourceName", *resource.Name, "action", resource.Action, "status", resource.Status, "attempts", *resource.Attempt)
 	log.Debug("reconciled resource config start")
 
-	configCacheNsTargetName := meta.NamespacedName(r.gnmicTarget.Config.Name).GetPrefixNamespacedName(origin.Config)
+	configCacheNsTargetName := meta.NamespacedName(r.nsTargetName).GetPrefixNamespacedName(origin.Config)
 	ce, err := r.cache.GetEntry(configCacheNsTargetName)
 	if err != nil {
 		return err
