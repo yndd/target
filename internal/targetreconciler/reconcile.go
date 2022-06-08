@@ -32,7 +32,7 @@ import (
 )
 
 func (r *reconciler) handlePendingResources() error {
-	configCacheNsTargetName := meta.NamespacedName(r.nsTargetName).GetPrefixNamespacedName(origin.Config)
+	configCacheNsTargetName := meta.NamespacedName(r.gnmicTarget.Config.Name).GetPrefixNamespacedName(origin.Config)
 	ce, err := r.cache.GetEntry(configCacheNsTargetName)
 	if err != nil {
 		return err
