@@ -153,6 +153,18 @@ func NewTargetInstance(ctx context.Context, o *TiOptions, opts ...TargetInstance
 	return ti
 }
 
+func (ti *targetInstance) CreateGNMIClient() error {
+	targetConfig, err := ti.GetTargetConfig()
+	if err != nil {
+		return err
+	}
+	ti.gnmicTarget = gnmictarget.NewTarget(targetConfig)
+	if err := ti.gnmicTarget.CreateGNMIClient(ti.ctx, grpc.WithBlock()); err != nil { // TODO add dialopts
+		return errors.Wrap(err, errCreateGnmiClient)
+	}
+	return nil
+}
+
 func (ti *targetInstance) InitTarget() error {
 	// initialize the target which implements the specific gnmi calls for this vendor target type
 	var err error
@@ -169,17 +181,7 @@ func (ti *targetInstance) InitTarget() error {
 	return nil
 }
 
-func (ti *targetInstance) CreateGNMIClient() error {
-	targetConfig, err := ti.GetTargetConfig()
-	if err != nil {
-		return err
-	}
-	ti.gnmicTarget = gnmictarget.NewTarget(targetConfig)
-	if err := ti.gnmicTarget.CreateGNMIClient(ti.ctx, grpc.WithBlock()); err != nil { // TODO add dialopts
-		return errors.Wrap(err, errCreateGnmiClient)
-	}
-	return nil
-}
+
 
 func (ti *targetInstance) GetInitialTargetConfig() error {
 	log := ti.log.WithValues("nsTargetName", ti.nsTargetName)

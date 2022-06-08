@@ -28,7 +28,6 @@ import (
 	"github.com/yndd/ndd-runtime/pkg/logging"
 	"github.com/yndd/ndd-runtime/pkg/meta"
 	"github.com/yndd/target/pkg/target"
-	"google.golang.org/grpc"
 )
 
 const (
@@ -98,10 +97,12 @@ func New(t *types.TargetConfig, namespace string, opts ...Option) (Reconciler, e
 	r.nsTargetName = r.gnmicTarget.Config.Name
 	r.targetName = r.gnmicTarget.Config.Name
 
-	r.gnmicTarget = gnmictarget.NewTarget(t)
-	if err := r.gnmicTarget.CreateGNMIClient(r.ctx, grpc.WithBlock()); err != nil { // TODO add dialopts
-		return nil, errors.Wrap(err, errCreateGnmiClient)
-	}
+	/*
+		r.gnmicTarget = gnmictarget.NewTarget(t)
+		if err := r.gnmicTarget.CreateGNMIClient(r.ctx, grpc.WithBlock()); err != nil { // TODO add dialopts
+			return nil, errors.Wrap(err, errCreateGnmiClient)
+		}
+	*/
 
 	return r, nil
 }
