@@ -95,7 +95,7 @@ func New(t *types.TargetConfig, namespace string, opts ...Option) (Reconciler, e
 	for _, opt := range opts {
 		opt(r)
 	}
-	r.nsTargetName = meta.GetNamespacedName(namespace, r.gnmicTarget.Config.Name)
+	r.nsTargetName = r.gnmicTarget.Config.Name
 	r.targetName = r.gnmicTarget.Config.Name
 
 	r.gnmicTarget = gnmictarget.NewTarget(t)
