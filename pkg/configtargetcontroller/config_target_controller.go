@@ -180,11 +180,11 @@ func (c *configTargetController) StartTarget(nsTargetName string) {
 	systemCacheNsTargetName := meta.NamespacedName(nsTargetName).GetPrefixNamespacedName(origin.System)
 	sce := cache.NewCacheEntry(systemCacheNsTargetName)
 	sce.SetModel(&model.Model{
-		ModelData:      []*gnmi.ModelData{},
-		StructRootType: reflect.TypeOf((*ygotnddp.Device)(nil)),
-		SchemaTreeRoot: ygotnddp.SchemaTree["Device"],
-		//JsonUnmarshaler: ygotnddp.Unmarshal,
-		EnumData: ygotnddp.ΛEnum,
+		ModelData:       []*gnmi.ModelData{},
+		StructRootType:  reflect.TypeOf((*ygotnddp.Device)(nil)),
+		SchemaTreeRoot:  ygotnddp.SchemaTree["Device"],
+		JsonUnmarshaler: ygotnddp.Unmarshal,
+		EnumData:        ygotnddp.ΛEnum,
 	})
 	c.options.Cache.AddEntry(sce)
 
