@@ -41,9 +41,12 @@ func (r *reconciler) handlePendingResources() error {
 	// get the list of Managed Resources (MR)
 	resourceList := ce.GetSystemConfigMap()
 
+	r.log.Debug("resourceList", "resourceList", resourceList)
+
 	pendingResources := map[ygotnddp.E_YnddSystem_ResourceAction]*ygotnddp.YnddSystem_Gvk{}
 	// loop over all resource and check if work is required on them
 	for _, resource := range resourceList {
+		r.log.Debug("resource", "resource", resource)
 		if resource.Status == ygotnddp.YnddSystem_ResourceStatus_PENDING {
 			if pendingResource, ok := pendingResources[resource.Action]; !ok {
 				// no resource is pending for this action so far
