@@ -128,12 +128,12 @@ type Status struct {
 // +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.kind=='Ready')].status"
 // +kubebuilder:printcolumn:name="ADDRESS",type="string",JSONPath=".spec.properties.config.address",description="address to connect to the target'"
 // +kubebuilder:printcolumn:name="PROTOCOL",type="string",JSONPath=".spec.properties.config.protocol",description="Protocol used to communicate to the target"
-// +kubebuilder:printcolumn:name="VENDORTYPE",type="string",JSONPath=".status.discoveryInfo.vendorType",description="VendorType of target"
-// +kubebuilder:printcolumn:name="PLATFORM",type="string",JSONPath=".status.discoveryInfo.platform",description="Platform of target"
-// +kubebuilder:printcolumn:name="SWVERSION",type="string",JSONPath=".status.discoveryInfo.swVersion",description="SW version of the target"
-// +kubebuilder:printcolumn:name="MACADDRESS",type="string",JSONPath=".status.discoveryInfo.macAddress",description="macAddress of the target"
-// +kubebuilder:printcolumn:name="SERIALNBR",type="string",JSONPath=".status.discoveryInfo.serialNumber",description="serialNumber of the target"
-// +kubebuilder:printcolumn:name="LASTSEEN",type="string",JSONPath=".status.discoveryInfo.lastSeen",description="serialNumber of the target"
+// +kubebuilder:printcolumn:name="VENDORTYPE",type="string",JSONPath=".spec.discoveryInfo.vendorType",description="VendorType of target"
+// +kubebuilder:printcolumn:name="PLATFORM",type="string",JSONPath=".spec.discoveryInfo.platform",description="Platform of target"
+// +kubebuilder:printcolumn:name="SWVERSION",type="string",JSONPath=".spec.discoveryInfo.swVersion",description="SW version of the target"
+// +kubebuilder:printcolumn:name="MACADDRESS",type="string",JSONPath=".spec.discoveryInfo.macAddress",description="macAddress of the target"
+// +kubebuilder:printcolumn:name="SERIALNBR",type="string",JSONPath=".spec.discoveryInfo.serialNumber",description="serialNumber of the target"
+// +kubebuilder:printcolumn:name="LASTSEEN",type="string",JSONPath=".spec.discoveryInfo.lastSeen",description="serialNumber of the target"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:resource:categories={ndd,nddd}, shortName=t
 type Target struct {
