@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.8.0
+    controller-gen.kubebuilder.io/version: v0.9.0
   creationTimestamp: null
   name: targets.target.yndd.io
 spec:
@@ -31,6 +31,10 @@ spec:
       jsonPath: .spec.properties.config.address
       name: ADDRESS
       type: string
+    - description: target hostname'
+      jsonPath: .spec.discoveryInfo.hostname
+      name: HOSTNAME
+      type: string
     - description: Protocol used to communicate to the target
       jsonPath: .spec.properties.config.protocol
       name: PROTOCOL
@@ -55,10 +59,10 @@ spec:
       jsonPath: .spec.discoveryInfo.serialNumber
       name: SERIALNBR
       type: string
-    - description: serialNumber of the target
+    - description: last time the target was updated
       jsonPath: .spec.discoveryInfo.lastSeen
       name: LASTSEEN
-      type: string
+      type: date
     - jsonPath: .metadata.creationTimestamp
       name: AGE
       type: date
@@ -89,9 +93,9 @@ spec:
                     description: Host name of the target
                     type: string
                   lastSeen:
-                    description: Last discovery time in nanoseconds
-                    format: int64
-                    type: integer
+                    description: Last discovery time
+                    format: date-time
+                    type: string
                   macAddress:
                     description: the Mac address of the target
                     type: string
@@ -214,9 +218,3 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []

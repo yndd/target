@@ -105,8 +105,8 @@ type DiscoveryInfo struct {
 	// Supported Encodings of the target
 	SupportedEncodings []string `json:"supportedEncodings,omitempty"`
 
-	// Last discovery time in nanoseconds
-	LastSeen int64 `json:"lastSeen,omitempty"`
+	// Last discovery time
+	LastSeen metav1.Time `json:"lastSeen,omitempty"`
 }
 
 // // Status defines the observed state of the Target
@@ -127,20 +127,21 @@ type DiscoveryInfo struct {
 // +kubebuilder:printcolumn:name="SYNC",type="string",JSONPath=".status.conditions[?(@.kind=='Synced')].status"
 // +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.kind=='Ready')].status"
 // +kubebuilder:printcolumn:name="ADDRESS",type="string",JSONPath=".spec.properties.config.address",description="address to connect to the target'"
+// +kubebuilder:printcolumn:name="HOSTNAME",type="string",JSONPath=".spec.discoveryInfo.hostname",description="target hostname'"
 // +kubebuilder:printcolumn:name="PROTOCOL",type="string",JSONPath=".spec.properties.config.protocol",description="Protocol used to communicate to the target"
 // +kubebuilder:printcolumn:name="VENDORTYPE",type="string",JSONPath=".spec.discoveryInfo.vendorType",description="VendorType of target"
 // +kubebuilder:printcolumn:name="PLATFORM",type="string",JSONPath=".spec.discoveryInfo.platform",description="Platform of target"
 // +kubebuilder:printcolumn:name="SWVERSION",type="string",JSONPath=".spec.discoveryInfo.swVersion",description="SW version of the target"
 // +kubebuilder:printcolumn:name="MACADDRESS",type="string",JSONPath=".spec.discoveryInfo.macAddress",description="macAddress of the target"
 // +kubebuilder:printcolumn:name="SERIALNBR",type="string",JSONPath=".spec.discoveryInfo.serialNumber",description="serialNumber of the target"
-// +kubebuilder:printcolumn:name="LASTSEEN",type="string",JSONPath=".spec.discoveryInfo.lastSeen",description="serialNumber of the target"
+// +kubebuilder:printcolumn:name="LASTSEEN",type="date",JSONPath=".spec.discoveryInfo.lastSeen",description="last time the target was updated"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:resource:categories={ndd,nddd}, shortName=t
 type Target struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec TargetSpec `json:"spec,omitempty"`
+	Spec   TargetSpec   `json:"spec,omitempty"`
 	Status TargetStatus `json:"status,omitempty"`
 }
 
