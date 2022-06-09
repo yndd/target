@@ -141,6 +141,7 @@ type Target struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	Spec TargetSpec `json:"spec,omitempty"`
+	Status TargetStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true

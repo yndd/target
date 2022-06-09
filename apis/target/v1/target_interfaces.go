@@ -56,22 +56,22 @@ type Tg interface {
 
 // GetCondition of this Network Node.
 func (t *Target) GetCondition(ct nddv1.ConditionKind) nddv1.Condition {
-	return t.Spec.Status.GetCondition(ct)
+	return t.Status.GetCondition(ct)
 }
 
 // SetConditions of the Network Node.
 func (t *Target) SetConditions(c ...nddv1.Condition) {
-	t.Spec.Status.SetConditions(c...)
+	t.Status.SetConditions(c...)
 }
 
 // GetControllerReference of the Network Node.
 func (t *Target) GetControllerReference() nddv1.Reference {
-	return t.Spec.Status.ControllerRef
+	return t.Status.ControllerRef
 }
 
 // SetControllerReference of the Network Node.
 func (t *Target) SetControllerReference(c nddv1.Reference) {
-	t.Spec.Status.ControllerRef = c
+	t.Status.ControllerRef = c
 }
 
 /*
