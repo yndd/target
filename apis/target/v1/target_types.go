@@ -25,7 +25,8 @@ import (
 type TargetSpec struct {
 	// Properties define the properties of the Target
 	Properties *TargetProperties `json:"properties,omitempty"`
-	Status     *TargetStatus     `json:"status,omitempty"`
+	// DiscoveryInfo
+	DiscoveryInfo *DiscoveryInfo `json:"discoveryInfo,omitempty"`
 }
 
 // TargetStatus defines the observed state of TargetNode
@@ -34,8 +35,6 @@ type TargetStatus struct {
 	nddv1.ConditionedStatus `json:",inline"`
 	// identifies the controller reference of the target
 	ControllerRef nddv1.Reference `json:"controllerRef,omitempty"`
-	// identifies the operational information of the target
-	DiscoveryInfo *DiscoveryInfo `json:"discoveryInfo,omitempty"`
 }
 
 // TargetProperties define the properties of the Target
@@ -129,12 +128,12 @@ type DiscoveryInfo struct {
 // +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.kind=='Ready')].status"
 // +kubebuilder:printcolumn:name="ADDRESS",type="string",JSONPath=".spec.properties.config.address",description="address to connect to the target'"
 // +kubebuilder:printcolumn:name="PROTOCOL",type="string",JSONPath=".spec.properties.config.protocol",description="Protocol used to communicate to the target"
-// +kubebuilder:printcolumn:name="VENDORTYPE",type="string",JSONPath=".status.discoveryInfo.vendorType",description="VendorType of target"
-// +kubebuilder:printcolumn:name="PLATFORM",type="string",JSONPath=".status.discoveryInfo.platform",description="Platform of target"
-// +kubebuilder:printcolumn:name="SWVERSION",type="string",JSONPath=".status.discoveryInfo.swVersion",description="SW version of the target"
-// +kubebuilder:printcolumn:name="MACADDRESS",type="string",JSONPath=".status.discoveryInfo.macAddress",description="macAddress of the target"
-// +kubebuilder:printcolumn:name="SERIALNBR",type="string",JSONPath=".status.discoveryInfo.serialNumber",description="serialNumber of the target"
-// +kubebuilder:printcolumn:name="LASTSEEN",type="string",JSONPath=".status.discoveryInfo.lastSeen",description="serialNumber of the target"
+// +kubebuilder:printcolumn:name="VENDORTYPE",type="string",JSONPath=".spec.discoveryInfo.vendorType",description="VendorType of target"
+// +kubebuilder:printcolumn:name="PLATFORM",type="string",JSONPath=".spec.discoveryInfo.platform",description="Platform of target"
+// +kubebuilder:printcolumn:name="SWVERSION",type="string",JSONPath=".spec.discoveryInfo.swVersion",description="SW version of the target"
+// +kubebuilder:printcolumn:name="MACADDRESS",type="string",JSONPath=".spec.discoveryInfo.macAddress",description="macAddress of the target"
+// +kubebuilder:printcolumn:name="SERIALNBR",type="string",JSONPath=".spec.discoveryInfo.serialNumber",description="serialNumber of the target"
+// +kubebuilder:printcolumn:name="LASTSEEN",type="string",JSONPath=".spec.discoveryInfo.lastSeen",description="serialNumber of the target"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:resource:categories={ndd,nddd}, shortName=t
 type Target struct {

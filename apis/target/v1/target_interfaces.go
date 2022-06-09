@@ -89,10 +89,11 @@ func (t *Target) GetSpec() (*ygotnddtarget.NddTarget_TargetEntry, error) {
 }
 */
 
-func (t *Target) GetDiscoveryInfo() DiscoveryInfo {
-	return *t.Spec.Status.DiscoveryInfo
+func (t *Target) GetDiscoveryInfo() *DiscoveryInfo {
+	return t.Spec.DiscoveryInfo
 }
 
 func (t *Target) SetDiscoveryInfo(dd *DiscoveryInfo) {
-	t.Spec.Status.DiscoveryInfo = dd
+	t.Spec.DiscoveryInfo = dd
+
 }

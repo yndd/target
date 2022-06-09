@@ -196,7 +196,7 @@ func (r *Reconciler) Reconcile(_ context.Context, req reconcile.Request) (reconc
 		if r.expectedVendorType != t.Spec.Properties.VendorType {
 			log.Debug("unexpected vendor type", "crVendorType", t.Spec.Properties.VendorType, "expectedVendorType", r.expectedVendorType)
 			// if the spec is no longer related to the vendor we want to remove the discovery information
-			if t.Spec.Status.DiscoveryInfo != nil && t.Spec.Status.DiscoveryInfo.VendorType == r.expectedVendorType {
+			if t.GetDiscoveryInfo() != nil && t.GetDiscoveryInfo().VendorType == r.expectedVendorType {
 				t.SetConditions(nddv1.Unknown())
 				//t.SetDiscoveryInfo(nil)
 				return reconcile.Result{Requeue: true}, errors.Wrap(r.client.Status().Update(ctx, t), errUpdateStatus)

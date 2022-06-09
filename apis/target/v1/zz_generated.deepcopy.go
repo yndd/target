@@ -176,9 +176,9 @@ func (in *TargetSpec) DeepCopyInto(out *TargetSpec) {
 		*out = new(TargetProperties)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.Status != nil {
-		in, out := &in.Status, &out.Status
-		*out = new(TargetStatus)
+	if in.DiscoveryInfo != nil {
+		in, out := &in.DiscoveryInfo, &out.DiscoveryInfo
+		*out = new(DiscoveryInfo)
 		(*in).DeepCopyInto(*out)
 	}
 }
