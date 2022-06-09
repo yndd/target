@@ -108,7 +108,7 @@ type targetInstance struct {
 	nsTargetName string
 	targetName   string
 	namespace    string
-	gnmicTarget  *gnmictarget.Target
+	gnmiclient   *gnmictarget.Target
 	paths        []*string
 	cache        cache.Cache
 	target       target.Target // implements specifics for the vendor type, like srl or sros
@@ -158,8 +158,8 @@ func (ti *targetInstance) CreateGNMIClient() error {
 	if err != nil {
 		return err
 	}
-	ti.gnmicTarget = gnmictarget.NewTarget(targetConfig)
-	if err := ti.gnmicTarget.CreateGNMIClient(ti.ctx, grpc.WithBlock()); err != nil { // TODO add dialopts
+	ti.gnmiclient = gnmictarget.NewTarget(targetConfig)
+	if err := ti.gnmiclient.CreateGNMIClient(ti.ctx, grpc.WithBlock()); err != nil { // TODO add dialopts
 		return errors.Wrap(err, errCreateGnmiClient)
 	}
 	return nil
@@ -174,7 +174,7 @@ func (ti *targetInstance) InitTarget() error {
 	}
 	if err := ti.target.Init(
 		target.WithLogging(ti.log.WithValues("target", ti.targetName)),
-		target.WithTarget(ti.gnmicTarget),
+		target.WithTarget(ti.gnmiclient),
 	); err != nil {
 		return err
 	}
@@ -284,6 +284,7 @@ func (ti *targetInstance) StartTargetCollector() error {
 		targetcollector.WithCache(ti.cache),
 		targetcollector.WithLogger(ti.log),
 		targetcollector.WithEventCh(ti.eventChs),
+		targetcollector.WithGNMIClient(ti.gnmiclient),
 	)
 	if err != nil {
 		return errors.Wrap(err, "cannot start device collector")
