@@ -90,7 +90,7 @@ func (r *reconciler) handlePendingResources() error {
 				return err
 			}
 			// delete the resource from the system cache if all succeeded
-			configCacheNsTargetName := meta.NamespacedName(r.nsTargetName).GetPrefixNamespacedName(origin.Config)
+			configCacheNsTargetName := meta.NamespacedName(r.nsTargetName).GetPrefixNamespacedName(origin.System)
 			ce, err := r.cache.GetEntry(configCacheNsTargetName)
 			if err != nil {
 				return err
@@ -114,7 +114,7 @@ func (r *reconciler) handlePendingResources() error {
 func (r *reconciler) updateResourceStatus(resource *ygotnddp.YnddSystem_Gvk, reconcileErr error) error {
 	log := r.log.WithValues("target", r.nsTargetName)
 
-	configCacheNsTargetName := meta.NamespacedName(r.nsTargetName).GetPrefixNamespacedName(origin.Config)
+	configCacheNsTargetName := meta.NamespacedName(r.nsTargetName).GetPrefixNamespacedName(origin.System)
 	ce, err := r.cache.GetEntry(configCacheNsTargetName)
 	if err != nil {
 		return err
