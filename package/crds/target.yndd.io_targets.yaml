@@ -82,6 +82,37 @@ spec:
           spec:
             description: TargetSpec struct
             properties:
+              discoveryInfo:
+                description: DiscoveryInfo
+                properties:
+                  hostname:
+                    description: Host name of the target
+                    type: string
+                  lastSeen:
+                    description: Last discovery time in nanoseconds
+                    format: int64
+                    type: integer
+                  macAddress:
+                    description: the Mac address of the target
+                    type: string
+                  platform:
+                    description: the Kind of the target
+                    type: string
+                  serialNumber:
+                    description: the Serial Number of the target
+                    type: string
+                  supportedEncodings:
+                    description: Supported Encodings of the target
+                    items:
+                      type: string
+                    type: array
+                  swVersion:
+                    description: SW version of the target
+                    type: string
+                  vendorType:
+                    description: the VendorType of the target
+                    type: string
+                type: object
               properties:
                 description: Properties define the properties of the Target
                 properties:
@@ -176,37 +207,6 @@ spec:
                     type: string
                 required:
                 - name
-                type: object
-              discoveryInfo:
-                description: The DiscoveryInfo of the Target
-                properties:
-                  hostname:
-                    description: Host name of the target
-                    type: string
-                  lastSeen:
-                    description: Last discovery time in nanoseconds
-                    format: int64
-                    type: integer
-                  macAddress:
-                    description: the Mac address of the target
-                    type: string
-                  platform:
-                    description: the Kind of the target
-                    type: string
-                  serialNumber:
-                    description: the Serial Number of the target
-                    type: string
-                  supportedEncodings:
-                    description: Supported Encodings of the target
-                    items:
-                      type: string
-                    type: array
-                  swVersion:
-                    description: SW version of the target
-                    type: string
-                  vendorType:
-                    description: the VendorType of the target
-                    type: string
                 type: object
             type: object
         type: object

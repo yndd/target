@@ -25,6 +25,8 @@ import (
 type TargetSpec struct {
 	// Properties define the properties of the Target
 	Properties *TargetProperties `json:"properties,omitempty"`
+	// DiscoveryInfo
+	DiscoveryInfo *DiscoveryInfo `json:"discoveryInfo,omitempty"`
 }
 
 // TargetStatus defines the observed state of TargetNode
@@ -33,8 +35,6 @@ type TargetStatus struct {
 	nddv1.ConditionedStatus `json:",inline"`
 	// identifies the controller reference of the target
 	ControllerRef nddv1.Reference `json:"controllerRef,omitempty"`
-	// identifies the operational information of the target
-	Status `json:",inline"`
 }
 
 // TargetProperties define the properties of the Target
