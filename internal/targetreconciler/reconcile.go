@@ -32,6 +32,7 @@ import (
 )
 
 func (r *reconciler) handlePendingResources() error {
+	log := r.log.WithValues("target", r.nsTargetName)
 	configCacheNsTargetName := meta.NamespacedName(r.nsTargetName).GetPrefixNamespacedName(origin.System)
 	ce, err := r.cache.GetEntry(configCacheNsTargetName)
 	if err != nil {
@@ -41,7 +42,7 @@ func (r *reconciler) handlePendingResources() error {
 	// get the list of Managed Resources (MR)
 	resourceList := ce.GetSystemConfigMap()
 
-	r.log.Debug("resourceList", "len", len(resourceList), "resourceList", resourceList)
+	log.Debug("resourceList", "len", len(resourceList), "resourceList", resourceList)
 
 	pendingResources := map[ygotnddp.E_YnddSystem_ResourceAction]*ygotnddp.YnddSystem_Gvk{}
 	// loop over all resource and check if work is required on them
