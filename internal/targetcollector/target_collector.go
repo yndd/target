@@ -21,19 +21,17 @@ import (
 	"time"
 
 	gnmictarget "github.com/karimra/gnmic/target"
-	"github.com/karimra/gnmic/types"
 	"github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/pkg/errors"
 	"github.com/yndd/cache/pkg/cache"
 	"github.com/yndd/ndd-runtime/pkg/logging"
-	"google.golang.org/grpc"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 )
 
 const (
 	// timers
-	defaultTargetReceiveBuffer = 1000
-	defaultRetryTimer          = 10 * time.Second
+	//defaultTargetReceiveBuffer = 1000
+	//defaultRetryTimer          = 10 * time.Second
 
 	// errors
 	errCreateGnmiClient          = "cannot create gnmi client"
@@ -49,6 +47,8 @@ type Collector interface {
 	WithLogger(log logging.Logger)
 	// add a cache to Collector
 	WithCache(c cache.Cache)
+	// add a gnmiclient
+	WithGNMIClient(gnmiclient *gnmictarget.Target)
 	// add k8s event channels to Collector
 	WithEventCh(eventChs map[string]chan event.GenericEvent)
 	// start the target collector
@@ -78,13 +78,21 @@ func WithEventCh(eventChs map[string]chan event.GenericEvent) Option {
 	}
 }
 
+// WithCache specifies the k8s event channels to use within the collector.
+func WithGNMIClient(gnmiclient *gnmictarget.Target) Option {
+	return func(o Collector) {
+		o.WithGNMIClient(gnmiclient)
+	}
+}
+
 // collector is the implementation of Collector interface
 type collector struct {
 	// config
-	namespace     string
+	//namespace     string
+	nsTargetName  string
 	subscriptions []*Subscription
 	// gnmi client
-	gnmicTarget *gnmictarget.Target
+	gnmiclient *gnmictarget.Target
 	// cache
 	cache cache.Cache
 	// k8s event channels
@@ -96,9 +104,10 @@ type collector struct {
 }
 
 // NewCollector creates a new GNMI collector
-func New(ctx context.Context, tc *types.TargetConfig, namespace string, paths []*string, opts ...Option) (Collector, error) {
+func New(ctx context.Context, nsTargetName string, paths []*string, opts ...Option) (Collector, error) {
 	c := &collector{
-		namespace: namespace,
+		//namespace: namespace,
+		nsTargetName: nsTargetName,
 		subscriptions: []*Subscription{
 			{
 				name:  "target-config-collector",
@@ -112,17 +121,19 @@ func New(ctx context.Context, tc *types.TargetConfig, namespace string, paths []
 		opt(c)
 	}
 
-	if tc.BufferSize == 0 {
-		tc.BufferSize = defaultTargetReceiveBuffer
-	}
-	if tc.RetryTimer <= 0 {
-		tc.RetryTimer = defaultRetryTimer
-	}
+	/*
+		if tc.BufferSize == 0 {
+			tc.BufferSize = defaultTargetReceiveBuffer
+		}
+		if tc.RetryTimer <= 0 {
+			tc.RetryTimer = defaultRetryTimer
+		}
 
-	c.gnmicTarget = gnmictarget.NewTarget(tc)
-	if err := c.gnmicTarget.CreateGNMIClient(ctx, grpc.WithBlock()); err != nil { // TODO add dialopts
-		return nil, errors.Wrap(err, errCreateGnmiClient)
-	}
+		c.gnmicTarget = gnmictarget.NewTarget(tc)
+		if err := c.gnmicTarget.CreateGNMIClient(ctx, grpc.WithBlock()); err != nil { // TODO add dialopts
+			return nil, errors.Wrap(err, errCreateGnmiClient)
+		}
+	*/
 
 	return c, nil
 }
@@ -135,12 +146,16 @@ func (c *collector) WithCache(tc cache.Cache) {
 	c.cache = tc
 }
 
+func (c *collector) WithGNMIClient(gnmiclient *gnmictarget.Target) {
+	c.gnmiclient = gnmiclient
+}
+
 func (c *collector) WithEventCh(eventChs map[string]chan event.GenericEvent) {
 	c.eventChs = eventChs
 }
 
-func (c *collector) GetTarget() *gnmictarget.Target {
-	return c.gnmicTarget
+func (c *collector) getGNMIClient() *gnmictarget.Target {
+	return c.gnmiclient
 }
 
 func (c *collector) GetSubscriptions() []*Subscription {
@@ -158,7 +173,7 @@ func (c *collector) GetSubscription(subName string) *Subscription {
 
 // Start starts the target collector and the gnmi subscription
 func (c *collector) Start() error {
-	log := c.log.WithValues("target", c.gnmicTarget.Config.Name, "address", c.gnmicTarget.Config.Address)
+	log := c.log.WithValues("target", c.nsTargetName)
 	log.Debug("starting target config collector...")
 
 	go func() {
@@ -188,7 +203,7 @@ func (c *collector) Start() error {
 
 // run metric collector
 func (c *collector) run() error {
-	log := c.log.WithValues("target", c.gnmicTarget.Config.Name, "address", c.gnmicTarget.Config.Address)
+	log := c.log.WithValues("target", c.nsTargetName)
 	log.Debug("running target config collector...")
 
 	c.ctx, c.subscriptions[0].cfn = context.WithCancel(c.ctx)
@@ -196,7 +211,7 @@ func (c *collector) run() error {
 	// this subscription is a go routine that runs until you send a stop through the stopCh
 	go c.startSubscription(c.ctx, &gnmi.Path{}, c.GetSubscriptions())
 
-	chanSubResp, chanSubErr := c.GetTarget().ReadSubscriptions()
+	chanSubResp, chanSubErr := c.getGNMIClient().ReadSubscriptions()
 
 	// run the response handler
 	for {
@@ -223,7 +238,7 @@ func (c *collector) run() error {
 
 // StartSubscription starts a subscription
 func (c *collector) startSubscription(ctx context.Context, prefix *gnmi.Path, s []*Subscription) error {
-	log := c.log.WithValues("target", c.gnmicTarget.Config.Name, "address", c.gnmicTarget.Config.Address)
+	log := c.log.WithValues("target", c.nsTargetName)
 	log.Debug("subscription start...")
 	// initialize new subscription
 
@@ -234,14 +249,14 @@ func (c *collector) startSubscription(ctx context.Context, prefix *gnmi.Path, s 
 	}
 
 	//log.Debug("Subscription", "Request", req)
-	go c.gnmicTarget.Subscribe(ctx, req, s[0].GetName())
+	go c.gnmiclient.Subscribe(ctx, req, s[0].GetName())
 	log.Debug("subscription started ...")
 	return nil
 }
 
 // StartGnmiSubscriptionHandler starts gnmi subscription
 func (c *collector) Stop() error {
-	log := c.log.WithValues("target", c.gnmicTarget.Config.Name, "address", c.gnmicTarget.Config.Address)
+	log := c.log.WithValues("target", c.nsTargetName)
 	log.Debug("stop Collector...")
 
 	c.stopSubscription(c.GetSubscriptions()[0])
@@ -252,7 +267,7 @@ func (c *collector) Stop() error {
 
 // StopSubscription stops a subscription
 func (c *collector) stopSubscription(s *Subscription) error {
-	log := c.log.WithValues("target", c.gnmicTarget.Config.Name, "address", c.gnmicTarget.Config.Address)
+	log := c.log.WithValues("target", c.nsTargetName)
 	log.Debug("stop subscription...")
 	//s.stopCh <- true // trigger quit
 	s.cfn()

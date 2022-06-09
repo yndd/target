@@ -37,12 +37,11 @@ const (
 )
 
 func (c *collector) handleSubscription(resp *gnmi.SubscribeResponse) error {
-	nsTargetName := c.gnmicTarget.Config.Name
-	configCacheNsTargetName := meta.NamespacedName(nsTargetName).GetPrefixNamespacedName(origin.Config)
-	systemCacheNsTargetName := meta.NamespacedName(nsTargetName).GetPrefixNamespacedName(origin.System)
+	configCacheNsTargetName := meta.NamespacedName(c.nsTargetName).GetPrefixNamespacedName(origin.Config)
+	systemCacheNsTargetName := meta.NamespacedName(c.nsTargetName).GetPrefixNamespacedName(origin.System)
 
-	log := c.log.WithValues("address", c.gnmicTarget.Config.Address,
-		"nsTargetName", nsTargetName,
+	log := c.log.WithValues(
+		"nsTargetName", c.nsTargetName,
 		"configCacheNsTargetName", configCacheNsTargetName,
 		"systemCacheNsTargetName", systemCacheNsTargetName)
 	//log.Debug("handle target update from target")

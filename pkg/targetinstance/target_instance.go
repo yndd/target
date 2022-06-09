@@ -255,7 +255,7 @@ func (ti *targetInstance) StartTargetReconciler() error {
 	//log := ti.log.WithValues("nsTargetName", ti.nsTargetName)
 	// start per target reconciler
 	var err error
-	ti.reconciler, err = targetreconciler.New(ti.gnmicTarget.Config, ti.namespace,
+	ti.reconciler, err = targetreconciler.New(ti.nsTargetName,
 		targetreconciler.WithTarget(ti.target),
 		targetreconciler.WithCache(ti.cache),
 		targetreconciler.WithLogger(ti.log),
@@ -280,7 +280,7 @@ func (ti *targetInstance) StartTargetCollector() error {
 	//log := ti.log.WithValues("nsTargetName", ti.nsTargetName)
 	// start per target collector
 	var err error
-	ti.collector, err = targetcollector.New(ti.ctx, ti.gnmicTarget.Config, ti.namespace, ti.paths,
+	ti.collector, err = targetcollector.New(ti.ctx, ti.nsTargetName, ti.paths,
 		targetcollector.WithCache(ti.cache),
 		targetcollector.WithLogger(ti.log),
 		targetcollector.WithEventCh(ti.eventChs),

@@ -20,7 +20,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/karimra/gnmic/types"
 	"github.com/pkg/errors"
 	"github.com/yndd/cache/pkg/cache"
 	"github.com/yndd/cache/pkg/origin"
@@ -34,7 +33,7 @@ const (
 	reconcileTimer = 1 * time.Second
 
 	// errors
-	errCreateGnmiClient = "cannot create gnmi client"
+	//errCreateGnmiClient = "cannot create gnmi client"
 )
 
 // Reconciler defines the interfaces for the collector
@@ -71,8 +70,8 @@ func WithTarget(t target.Target) Option {
 // reconciler defines the parameters for the collector
 type reconciler struct {
 	nsTargetName string
-	targetName   string
-	namespace    string
+	//targetName   string
+	//namespace    string
 	//gnmicTarget  *gnmictarget.Target
 	target target.Target
 	cache  cache.Cache
@@ -84,14 +83,13 @@ type reconciler struct {
 }
 
 // NewCollector creates a new GNMI collector
-func New(t *types.TargetConfig, namespace string, opts ...Option) (Reconciler, error) {
+func New(nsTargetName string, opts ...Option) (Reconciler, error) {
 	r := &reconciler{
-
-		namespace:    namespace,
-		nsTargetName: meta.GetNamespacedName(namespace, t.Name),
-		targetName:   t.Name,
-		stopCh:       make(chan bool),
-		ctx:          context.Background(),
+		//namespace:    namespace,
+		nsTargetName: nsTargetName,
+		//targetName:   t.Name,
+		stopCh: make(chan bool),
+		ctx:    context.Background(),
 	}
 	for _, opt := range opts {
 		opt(r)
